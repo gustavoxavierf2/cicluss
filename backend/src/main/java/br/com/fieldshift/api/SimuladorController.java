@@ -1,8 +1,8 @@
 package br.com.fieldshift.api;
 
-import br.com.fieldshift.core.agente.Agente;
-import br.com.fieldshift.core.agente.AgenteDemonstracao;
+import br.com.fieldshift.core.agente.AgenteComReserva;
 import br.com.fieldshift.core.agente.ContextoAgente;
+import br.com.fieldshift.core.agente.RespostaAgente;
 import br.com.fieldshift.core.modelo.Cultura;
 import br.com.fieldshift.core.modelo.ItemRanking;
 import br.com.fieldshift.core.modelo.Simulacao;
@@ -25,10 +25,10 @@ public class SimuladorController {
     private final CulturaRepository culturas;
     private final SimuladorService simulador;
     private final RecomendacaoService recomendacao;
-    private final Agente agente;
+    private final AgenteComReserva agente;
 
     public SimuladorController(CulturaRepository culturas, SimuladorService simulador,
-                               RecomendacaoService recomendacao, Agente agente) {
+                               RecomendacaoService recomendacao, AgenteComReserva agente) {
         this.culturas = culturas;
         this.simulador = simulador;
         this.recomendacao = recomendacao;
@@ -62,7 +62,7 @@ public class SimuladorController {
                 : simulador.simular(req.latitude(), req.longitude(), req.solo(), req.culturaTesteId());
         List<ItemRanking> ranking = recomendacao.recomendar(req.latitude(), req.longitude(), req.solo());
 
-        String resposta = agente.responder(req.pergunta(), new ContextoAgente(plantada, alternativa, ranking));
-        return new Requisicoes.Resposta(resposta, agente instanceof AgenteDemonstracao);
+        RespostaAgente resposta = agente.responder(req.pergunta(), new ContextoAgente(plantada, alternativa, ranking));
+        return new Requisicoes.Resposta(resposta.texto(), resposta.demonstracao());
     }
 }

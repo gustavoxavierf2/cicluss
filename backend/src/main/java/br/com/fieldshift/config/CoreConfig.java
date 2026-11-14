@@ -1,7 +1,6 @@
 package br.com.fieldshift.config;
 
-import br.com.fieldshift.core.agente.Agente;
-import br.com.fieldshift.core.agente.AgenteDemonstracao;
+import br.com.fieldshift.core.agente.AgenteComReserva;
 import br.com.fieldshift.core.clima.ClimaProvider;
 import br.com.fieldshift.core.clima.HttpClimaProvider;
 import br.com.fieldshift.core.clima.MockClimaProvider;
@@ -10,6 +9,8 @@ import br.com.fieldshift.core.servico.CulturaRepository;
 import br.com.fieldshift.core.servico.RecomendacaoService;
 import br.com.fieldshift.core.servico.SimuladorService;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -24,6 +25,8 @@ import java.time.Clock;
  */
 @Configuration
 public class CoreConfig {
+
+    private static final Logger LOG = LoggerFactory.getLogger(CoreConfig.class);
 
     /**
      * fieldshift.clima.fonte=mock  → dados falsos (padrão)
@@ -66,8 +69,18 @@ public class CoreConfig {
         return new RecomendacaoService(simulador, culturas);
     }
 
+    /**
+     * Com fieldshift.agente.chave (variável de ambiente ANTHROPIC_API_KEY) o chat usa a IA;
+     * sem ela, ou se a IA falhar ou demorar, responde o agente de demonstração.
+     */
     @Bean
-    public Agente agente() {
-        return new AgenteDemonstracao();
+    public AgenteComReserva agente(@Value("${fieldshift.agente.chave:}") String chave,
+                                   @Value("${fieldshift.agente.modelo:claude-sonnet-5-5}") String modelo,
+                                   @Value("${fieldshift.clima.fonte:mock}") String fonteClima) {
+        AgenteComReserva agente = AgenteComReserva.deConfiguracao(chave, modelo, "mock".equals(fonteClima));
+        LOG.info(agente.temIa()
+                ? "Agente: IA ligada (modelo " + modelo + ")."
+                : "Agente: modo demonstração (ANTHROPIC_API_KEY não definida).");
+        return agente;
     }
 }

@@ -12,7 +12,8 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@SpringBootTest
+// Sem chave: os testes nunca chamam a API de verdade, mesmo que ANTHROPIC_API_KEY exista na máquina.
+@SpringBootTest(properties = "fieldshift.agente.chave=")
 @AutoConfigureMockMvc
 class SimuladorControllerTest {
 
