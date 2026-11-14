@@ -38,23 +38,34 @@ fi
 echo "Subindo backend e frontend..."
 (cd "$raiz/backend" && exec mvn -q spring-boot:run) &
 back=$!
-(cd "$raiz/frontend" && exec npm run dev) &
-front=$!
+front=""
 
 encerrar() {
   trap - INT TERM EXIT
-  kill "$back" "$front" 2>/dev/null || true
-  wait "$back" "$front" 2>/dev/null || true
+  kill "$back" $front 2>/dev/null || true
+  wait "$back" $front 2>/dev/null || true
   echo "Ciclus encerrado."
 }
 trap encerrar INT TERM EXIT
 
-pronto=0
+# O frontend só sobe depois que o backend responde, para a página não abrir sem servidor.
+back_pronto=0
 for _ in $(seq 1 180); do
-  kill -0 "$back" 2>/dev/null && kill -0 "$front" 2>/dev/null || break
-  if porta_aberta 8080 && porta_aberta 5173; then pronto=1; break; fi
+  kill -0 "$back" 2>/dev/null || break
+  if porta_aberta 8080; then back_pronto=1; break; fi
   sleep 1
 done
+
+pronto=0
+if [ "$back_pronto" = 1 ]; then
+  (cd "$raiz/frontend" && exec npm run dev) &
+  front=$!
+  for _ in $(seq 1 60); do
+    kill -0 "$back" 2>/dev/null && kill -0 "$front" 2>/dev/null || break
+    if porta_aberta 5173; then pronto=1; break; fi
+    sleep 1
+  done
+fi
 
 if [ "$pronto" = 1 ]; then
   echo

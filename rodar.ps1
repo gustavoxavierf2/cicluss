@@ -45,14 +45,23 @@ if ($env:ANTHROPIC_API_KEY) {
 Write-Host 'Subindo backend e frontend...'
 $back = Start-Process cmd.exe -ArgumentList '/c', 'mvn -q spring-boot:run' `
     -WorkingDirectory (Join-Path $raiz 'backend') -NoNewWindow -PassThru
-$front = Start-Process cmd.exe -ArgumentList '/c', 'npm run dev' `
-    -WorkingDirectory (Join-Path $raiz 'frontend') -NoNewWindow -PassThru
+$front = $null
 
 try {
-    $pronto = $false
-    for ($i = 0; $i -lt 180 -and -not $back.HasExited -and -not $front.HasExited; $i++) {
-        if ((Test-Porta 8080) -and (Test-Porta 5173)) { $pronto = $true; break }
+    # O frontend so sobe depois que o backend responde, para a pagina nao abrir sem servidor.
+    $backPronto = $false
+    for ($i = 0; $i -lt 180 -and -not $back.HasExited; $i++) {
+        if (Test-Porta 8080) { $backPronto = $true; break }
         Start-Sleep -Seconds 1
+    }
+    $pronto = $false
+    if ($backPronto) {
+        $front = Start-Process cmd.exe -ArgumentList '/c', 'npm run dev' `
+            -WorkingDirectory (Join-Path $raiz 'frontend') -NoNewWindow -PassThru
+        for ($i = 0; $i -lt 60 -and -not $back.HasExited -and -not $front.HasExited; $i++) {
+            if (Test-Porta 5173) { $pronto = $true; break }
+            Start-Sleep -Seconds 1
+        }
     }
     if ($pronto) {
         Write-Host ''
