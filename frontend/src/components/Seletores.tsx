@@ -5,6 +5,8 @@ export interface Respostas {
   solo: TipoSolo
   culturaPlantadaId: string
   culturaTesteId: string
+  /** Texto do campo; vazio quando o agricultor não informou a área. */
+  hectares: string
 }
 
 interface Props {
@@ -60,6 +62,19 @@ export function Seletores({ culturas, respostas, aoMudar, podeCalcular, carregan
             <option key={s} value={s}>{NOME_SOLO[s]}</option>
           ))}
         </select>
+      </label>
+
+      <label className="seletor seletor--curto">
+        <span className="seletor__titulo">4. Quantos hectares?</span>
+        <input
+          type="number"
+          inputMode="decimal"
+          min="0.1"
+          step="0.5"
+          placeholder="ex.: 2"
+          value={respostas.hectares}
+          onChange={(e) => aoMudar({ ...respostas, hectares: e.target.value })}
+        />
       </label>
 
       <div className="seletor seletor--acao">

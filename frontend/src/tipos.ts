@@ -4,6 +4,25 @@ export type TipoSolo = 'ARENOSO' | 'ARGILOSO' | 'MISTO' | 'NAO_SEI'
 export type Nivel = 'BOM' | 'ATENCAO' | 'RUIM'
 export type Risco = 'NENHUM' | 'SECA' | 'CHUVA_EXCESSIVA' | 'CALOR' | 'FRIO' | 'SOLO_INADEQUADO'
 
+export type GrupoRotacao = 'GRAMINEA' | 'LEGUMINOSA' | 'RAIZ' | 'PERENE'
+
+export interface Economia {
+  produtividadeKgHa: number
+  precoPorKg: number
+  custoPorHa: number
+  fonte: string
+}
+
+/** Estimativa de safra e dinheiro de uma cultura em um ano (valores em kg e R$). */
+export interface Safra {
+  ano: number
+  hectares: number
+  producaoKg: number
+  receita: number
+  custo: number
+  saldo: number
+}
+
 export interface Faixa {
   idealMin: number
   idealMax: number
@@ -19,6 +38,8 @@ export interface Cultura {
   solos: TipoSolo[]
   cicloDias: number
   fonte: string
+  grupoRotacao: GrupoRotacao | null
+  economia: Economia | null
 }
 
 export interface ClimaAnual {
@@ -58,6 +79,35 @@ export interface Simulacao {
   anos: ResultadoAno[]
   resumoPassado: Resumo
   resumoFuturo: Resumo
+  hectares: number | null
+  safras: Safra[]
+}
+
+export interface Cenario {
+  cultura: Cultura
+  resultado: ResultadoAno
+  safra: Safra | null
+}
+
+export interface AnoPlano {
+  ano: number
+  cultura: Cultura
+  principal: boolean
+  resultado: ResultadoAno
+  safra: Safra | null
+  porque: string
+  cuidado: string
+  planoB: Cultura | null
+}
+
+export interface Planejamento {
+  principal: Cultura
+  hectares: number
+  anos: AnoPlano[]
+  saldoTotal: number | null
+  anosDeRisco: number
+  resumo: string
+  avisos: string[]
 }
 
 export interface ItemRanking {

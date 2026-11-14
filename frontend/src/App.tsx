@@ -8,8 +8,13 @@ import { BarraAnos } from './components/BarraAnos'
 import { DetalheAno } from './components/DetalheAno'
 import { ResumoComparativo } from './components/ResumoComparativo'
 import { Ranking } from './components/Ranking'
+import { CenarioClima } from './components/CenarioClima'
+import { PlanoPlantio } from './components/PlanoPlantio'
 import { ChatAgente } from './components/ChatAgente'
 import type { Mensagem } from './components/ChatAgente'
+import logo from './assets/logo-ciclus.png'
+import tatuPlantando from './assets/tatu-plantando.png'
+import tatuDormindo from './assets/tatu-dormindo.png'
 import './App.css'
 
 interface Resultado {
@@ -18,12 +23,18 @@ interface Resultado {
   ranking: ItemRanking[]
 }
 
-type Aba = 'anos' | 'plantar'
+type Aba = 'anos' | 'plantar' | 'plano'
+
+/** Área digitada pelo agricultor; null quando está vazia ou inválida. */
+function lerHectares(texto: string): number | null {
+  const n = Number(texto.replace(',', '.'))
+  return texto.trim() !== '' && Number.isFinite(n) && n > 0 ? n : null
+}
 
 export default function App() {
   const [culturas, setCulturas] = useState<Cultura[]>([])
   const [ponto, setPonto] = useState<Ponto | null>(null)
-  const [respostas, setRespostas] = useState<Respostas>({ solo: 'NAO_SEI', culturaPlantadaId: '', culturaTesteId: '' })
+  const [respostas, setRespostas] = useState<Respostas>({ solo: 'NAO_SEI', culturaPlantadaId: '', culturaTesteId: '', hectares: '1' })
   const [ativo, setAtivo] = useState(false)
   const [resultado, setResultado] = useState<Resultado | null>(null)
   const [ano, setAno] = useState(0)
@@ -33,6 +44,8 @@ export default function App() {
   const [mensagens, setMensagens] = useState<Mensagem[]>([])
   const [pensando, setPensando] = useState(false)
   const [demonstracao, setDemonstracao] = useState(true)
+  const [culturaPlanoId, setCulturaPlanoId] = useState('')
+  const hectares = lerHectares(respostas.hectares)
   const pedido = useRef(0)
 
   useEffect(() => {
@@ -56,8 +69,8 @@ export default function App() {
     setErro(null)
     const teste = respostas.culturaTesteId || null
     Promise.all([
-      api.simular(ponto, respostas.solo, respostas.culturaPlantadaId),
-      teste ? api.simular(ponto, respostas.solo, teste) : Promise.resolve(null),
+      api.simular(ponto, respostas.solo, respostas.culturaPlantadaId, hectares),
+      teste ? api.simular(ponto, respostas.solo, teste, hectares) : Promise.resolve(null),
       api.recomendar(ponto, respostas.solo),
     ])
       .then(([plantada, alternativa, ranking]) => {
@@ -68,13 +81,13 @@ export default function App() {
       })
       .catch((e: Error) => meu === pedido.current && setErro(e.message))
       .finally(() => meu === pedido.current && setCarregando(false))
-  }, [ativo, ponto, respostas])
+  }, [ativo, ponto, respostas.solo, respostas.culturaPlantadaId, respostas.culturaTesteId, hectares])
 
   function perguntar(pergunta: string) {
     if (!ponto || !resultado) return
     setMensagens((m) => [...m, { autor: 'voce', texto: pergunta }])
     setPensando(true)
-    api.perguntar(pergunta, ponto, respostas.solo, respostas.culturaPlantadaId, respostas.culturaTesteId || null)
+    api.perguntar(pergunta, ponto, respostas.solo, respostas.culturaPlantadaId, respostas.culturaTesteId || null, hectares)
       .then((r) => {
         setDemonstracao(r.demonstracao)
         setMensagens((m) => [...m, { autor: 'agente', texto: r.resposta }])
@@ -87,6 +100,11 @@ export default function App() {
     if (culturaId === respostas.culturaPlantadaId) return
     setRespostas({ ...respostas, culturaTesteId: culturaId })
     setAba('anos')
+  }
+
+  function planejarCom(culturaId: string) {
+    setCulturaPlanoId(culturaId)
+    setAba('plano')
   }
 
   const anos = resultado?.plantada.anos ?? []
@@ -102,18 +120,10 @@ export default function App() {
     <div className="app">
       <header className="topo">
         <div className="topo__marca">
-          <span className="topo__logo" aria-hidden="true">
-            <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"
-              strokeLinecap="round" strokeLinejoin="round">
-              <path d="M20 12a8 8 0 1 1-2.34-5.66" />
-              <path d="M20 4v4h-4" />
-              <path d="M12 16c0-3 1.5-5 4-6-3 0-5 1.5-5.5 3.5C10 12 9 11.5 8 11.5c1 1 2 2.5 2 4.5" />
-            </svg>
-          </span>
-          <div>
-            <h1>Ciclus</h1>
-            <p>E se você tivesse plantado outra coisa? Simulador de culturas com dados de satélite da NASA</p>
-          </div>
+          <h1 className="topo__logo">
+            <img src={logo} alt="Ciclus" width="120" height="36" />
+          </h1>
+          <p>E se você tivesse plantado outra coisa? Simulador de culturas com dados de satélite da NASA</p>
         </div>
         <span className="topo__demo">dados de demonstração</span>
       </header>
@@ -148,23 +158,35 @@ export default function App() {
               onClick={() => setAba('plantar')}>
               O que plantar
             </button>
+            <button type="button" role="tab" aria-selected={aba === 'plano'} className={aba === 'plano' ? 'aba aba--ativa' : 'aba'}
+              onClick={() => setAba('plano')}>
+              Planejamento
+            </button>
           </nav>
 
           <div className={`painel__corpo ${carregando && resultado ? 'painel__corpo--carregando' : ''}`}>
-            {erro && <div className="erro" role="alert">{erro}</div>}
+            {erro && (
+              <div className="erro" role="alert">
+                {!resultado && <img className="erro__tatu" src={tatuDormindo} alt="" width="84" height="61" />}
+                <span>{erro}</span>
+              </div>
+            )}
 
             {!resultado && !erro && (
               <div className="vazio">
-                <h2>Seu terreno, ano a ano</h2>
-                <ol>
-                  <li>Escolha o que você plantou e o que quer comparar, lá em cima.</li>
-                  <li>Clique no mapa onde fica o terreno.</li>
-                  <li>Aperte <b>Ver resultado</b>.</li>
-                </ol>
-                <p>
-                  Você vai arrastar uma barra de anos: para trás, vê como cada cultura teria ido com o clima que
-                  realmente aconteceu ali; para frente, vê a previsão.
-                </p>
+                <div className="vazio__texto">
+                  <h2>Seu terreno, ano a ano</h2>
+                  <ol>
+                    <li>Escolha o que você plantou e o que quer comparar, lá em cima.</li>
+                    <li>Clique no mapa onde fica o terreno.</li>
+                    <li>Aperte <b>Ver resultado</b>.</li>
+                  </ol>
+                  <p>
+                    Você vai arrastar uma barra de anos: para trás, vê como cada cultura teria ido com o clima que
+                    realmente aconteceu ali; para frente, vê a previsão.
+                  </p>
+                </div>
+                <img className="vazio__tatu" src={tatuPlantando} alt="" width="150" height="147" />
               </div>
             )}
 
@@ -178,11 +200,34 @@ export default function App() {
                   aoMudar={setAno}
                 />
                 <DetalheAno plantada={resultado.plantada} alternativa={resultado.alternativa} ano={ano} />
+                {ponto && (
+                  <CenarioClima
+                    ponto={ponto}
+                    solo={respostas.solo}
+                    hectares={hectares}
+                    plantada={resultado.plantada}
+                    alternativa={resultado.alternativa}
+                    ano={ano}
+                  />
+                )}
                 <ResumoComparativo plantada={resultado.plantada} alternativa={resultado.alternativa} />
               </>
             )}
 
-            {resultado && aba === 'plantar' && <Ranking itens={resultado.ranking} aoTestar={compararCom} />}
+            {resultado && aba === 'plantar' && (
+              <Ranking itens={resultado.ranking} aoTestar={compararCom} aoPlanejar={planejarCom} />
+            )}
+
+            {resultado && ponto && aba === 'plano' && (
+              <PlanoPlantio
+                ponto={ponto}
+                solo={respostas.solo}
+                hectares={hectares}
+                culturas={culturas}
+                culturaId={culturaPlanoId || respostas.culturaPlantadaId}
+                aoEscolherCultura={setCulturaPlanoId}
+              />
+            )}
           </div>
         </section>
       </main>

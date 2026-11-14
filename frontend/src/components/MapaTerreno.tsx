@@ -43,7 +43,7 @@ export function MapaTerreno({ ponto, aoEscolher }: Props) {
         <CircleMarker
           center={[ponto.latitude, ponto.longitude]}
           radius={10}
-          pathOptions={{ color: '#fff', weight: 3, fillColor: '#0f4d3a', fillOpacity: 1 }}
+          pathOptions={{ color: '#fff', weight: 3, fillColor: '#2e4a3f', fillOpacity: 1 }}
         />
       )}
     </MapContainer>

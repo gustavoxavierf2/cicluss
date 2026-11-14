@@ -1,21 +1,40 @@
 :root {
-  --fundo: #f4f1e8;
-  --cartao: #fffdf8;
-  --texto: #1f2a22;
-  --texto-suave: #5d6a60;
-  --borda: #e3ddcc;
-  --verde-escuro: #0f4d3a;
-  --verde: #1f5c3d;
-  --verde-claro: #e3efe6;
-  --passado: #1f5c3d;
-  --futuro: #b5833f;
-  --futuro-claro: #f5ead6;
-  --terra: #8a5a2b;
-  --bom: #2f8a57;
-  --atencao: #d99a1e;
-  --ruim: #c2462f;
+  /* ---------- paleta do tema ---------- */
+  --verde-petroleo: #2e4a3f;
+  --verde-oliva: #8fb396;
+  --areia-clara: #f6efe6;
+  --amarelo-dourado: #e29556;
+  --terracota-escura: #b55e3c;
+
+  /* Derivados da paleta (tons claros para fundos, escuros para texto pequeno). */
+  --oliva-claro: #e0eae2;
+  --dourado-claro: #f9e8da;
+  --terracota-clara: #f3e5e0;
+  --terracota-texto: #7a3a20;
+
+  /* ---------- papéis ---------- */
+  --fundo: var(--areia-clara);
+  --cartao: #fcf9f4;
+  --campo: #fffdf9;
+  --texto: #1f332a;
+  --texto-suave: #566559;
+  --borda: #e2d8c8;
+  --borda-forte: #c8bba7;
+  --verde-escuro: var(--verde-petroleo);
+  --verde: var(--verde-petroleo);
+  --verde-claro: var(--oliva-claro);
+  --destaque: var(--amarelo-dourado);
+  --passado: var(--verde-petroleo);
+  --futuro: var(--terracota-escura);
+  --futuro-claro: var(--dourado-claro);
+  --futuro-texto: var(--terracota-texto);
+  --terra: var(--terracota-texto);
+  --bom: var(--verde-oliva);
+  --atencao: var(--amarelo-dourado);
+  --ruim: var(--terracota-escura);
+  --ruim-claro: var(--terracota-clara);
   --raio: 12px;
-  --sombra: 0 1px 2px rgb(40 35 20 / 6%), 0 4px 16px rgb(40 35 20 / 5%);
+  --sombra: 0 1px 2px rgb(46 40 30 / 7%), 0 4px 16px rgb(46 40 30 / 6%);
 
   font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
   color: var(--texto);

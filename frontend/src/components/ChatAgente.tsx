@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import type { FormEvent } from 'react'
+import tatuNotebook from '../assets/tatu-notebook.png'
 
 export interface Mensagem {
   autor: 'voce' | 'agente'
@@ -60,9 +61,10 @@ export function ChatAgente({ mensagens, carregando, demonstracao, sugestoes, aoP
 
       <div className="chat__mensagens" aria-live="polite" ref={caixa}>
         {mensagens.length === 0 && (
-          <p className="chat__vazio">
-            Pergunte sobre um ano, sobre o futuro ou qual cultura combina mais com o seu terreno.
-          </p>
+          <div className="chat__vazio">
+            <img src={tatuNotebook} alt="" width="120" height="112" />
+            <p>Pergunte sobre um ano, sobre o futuro ou qual cultura combina mais com o seu terreno.</p>
+          </div>
         )}
         {mensagens.map((m, i) => (
           <div key={i} className={`bolha bolha--${m.autor}`}>

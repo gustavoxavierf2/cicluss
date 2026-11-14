@@ -3,9 +3,10 @@ import type { ItemRanking } from '../tipos'
 interface Props {
   itens: ItemRanking[]
   aoTestar: (culturaId: string) => void
+  aoPlanejar: (culturaId: string) => void
 }
 
-export function Ranking({ itens, aoTestar }: Props) {
+export function Ranking({ itens, aoTestar, aoPlanejar }: Props) {
   return (
     <section className="ranking">
       <h2>O que mais combina com este terreno</h2>
@@ -17,9 +18,14 @@ export function Ranking({ itens, aoTestar }: Props) {
             <div className="ranking__info">
               <div className="ranking__topo">
                 <strong>{i.cultura.nome}</strong>
-                <button type="button" className="link" onClick={() => aoTestar(i.cultura.id)}>
-                  comparar
-                </button>
+                <span className="ranking__acoes">
+                  <button type="button" className="link" onClick={() => aoTestar(i.cultura.id)}>
+                    comparar
+                  </button>
+                  <button type="button" className="link" onClick={() => aoPlanejar(i.cultura.id)}>
+                    planejar
+                  </button>
+                </span>
               </div>
               <div className="ranking__trilho">
                 <span

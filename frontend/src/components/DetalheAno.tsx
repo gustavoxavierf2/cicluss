@@ -1,5 +1,6 @@
-import type { ClimaAnual, ResultadoAno, Simulacao } from '../tipos'
+import type { ClimaAnual, ResultadoAno, Safra, Simulacao } from '../tipos'
 import { NOME_NIVEL } from '../tipos'
+import { AvisoEstimativa, SafraEstimada } from './SafraEstimada'
 
 interface Props {
   plantada: Simulacao
@@ -13,7 +14,7 @@ function umidadeEmPalavras(u: number) {
   return 'úmida'
 }
 
-function Coluna({ titulo, resultado }: { titulo: string; resultado: ResultadoAno | undefined }) {
+function Coluna({ titulo, resultado, safra }: { titulo: string; resultado: ResultadoAno | undefined; safra?: Safra }) {
   if (!resultado) return null
   return (
     <div className={`resultado resultado--${resultado.nivel.toLowerCase()} ${resultado.projetado ? 'resultado--previsao' : ''}`}>
@@ -23,6 +24,7 @@ function Coluna({ titulo, resultado }: { titulo: string; resultado: ResultadoAno
         <span>nota {resultado.nota}</span>
       </div>
       <p>{resultado.motivo}</p>
+      <SafraEstimada safra={safra} />
     </div>
   )
 }
@@ -55,6 +57,8 @@ export function DetalheAno({ plantada, alternativa, ano }: Props) {
   const a = plantada.anos.find((r) => r.ano === ano)
   const b = alternativa?.anos.find((r) => r.ano === ano)
   if (!a) return null
+  const safraA = plantada.safras.find((s) => s.ano === ano)
+  const safraB = alternativa?.safras.find((s) => s.ano === ano)
 
   return (
     <section className="detalhe">
@@ -65,9 +69,10 @@ export function DetalheAno({ plantada, alternativa, ano }: Props) {
         </span>
       </div>
       <div className="detalhe__colunas">
-        <Coluna titulo={`${plantada.cultura.nome} (o que você plantou)`} resultado={a} />
-        {alternativa && <Coluna titulo={`${alternativa.cultura.nome} (e se?)`} resultado={b} />}
+        <Coluna titulo={`${plantada.cultura.nome} (o que você plantou)`} resultado={a} safra={safraA} />
+        {alternativa && <Coluna titulo={`${alternativa.cultura.nome} (e se?)`} resultado={b} safra={safraB} />}
       </div>
+      {(safraA || safraB) && <AvisoEstimativa />}
       <Clima clima={a.clima} />
     </section>
   )
