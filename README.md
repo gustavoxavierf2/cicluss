@@ -10,28 +10,52 @@ Projeto da equipe para o desafio *Field Shift: Adapting Farms with NASA Data* (N
 
 ```
 backend/   API em Java 21 + Spring Boot 3.5 (porta 8080)
+rodar.ps1 / rodar.sh   sobem tudo com um comando
 frontend/  Site em React + TypeScript + Vite + Leaflet (porta 5173)
 docs/      Contrato de dados para o pessoal dos dados
 ```
 
 ## Como rodar
 
-Pré-requisitos: Java 21, Maven 3.9+, Node 20+.
+Pré-requisitos: Java 21 ou mais novo, Maven 3.9+, Node 20+.
 
-```bash
-# terminal 1 — backend
-cd backend
-mvn spring-boot:run
+Um comando só, na raiz do projeto (sobe backend e frontend juntos e mostra a URL):
 
-# terminal 2 — frontend
-cd frontend
-npm install
-npm run dev
+```powershell
+# Windows (PowerShell)
+powershell -ExecutionPolicy Bypass -File .odar.ps1
 ```
 
-Abra http://localhost:5173. Em desenvolvimento, o Vite repassa `/api` para o backend.
+```bash
+# Linux / macOS
+./rodar.sh
+```
 
-Testes do backend: `cd backend && mvn test`.
+Abra http://localhost:5173. `Ctrl+C` encerra os dois. Em desenvolvimento, o Vite repassa `/api` para o backend (porta 8080).
+
+Se preferir subir separado: `cd backend && mvn spring-boot:run` em um terminal e `cd frontend && npm install && npm run dev` em outro.
+
+Testes do backend: `cd backend && mvn test`. Build do front: `cd frontend && npm run build`.
+
+### Como ligar a IA do chat
+
+O chat "Tire dúvidas" usa a API da Anthropic quando a variável de ambiente `ANTHROPIC_API_KEY` existe **no terminal em que você roda o backend**. A chave fica só no backend, nunca vai para o navegador.
+
+```powershell
+# Windows (PowerShell)
+$env:ANTHROPIC_API_KEY = "sua-chave"
+powershell -ExecutionPolicy Bypass -File .odar.ps1
+```
+
+```bash
+# Linux / macOS
+export ANTHROPIC_API_KEY="sua-chave"
+./rodar.sh
+```
+
+- Sem a variável, ou se a chamada falhar ou passar de 20 s, quem responde é o agente de demonstração (regras fixas) e o chat mostra o selo **modo demonstração**. O motivo da falha aparece no log do backend.
+- O modelo é configurável em `backend/src/main/resources/application.properties`: `fieldshift.agente.modelo` (padrão `claude-sonnet-5-5`).
+- A IA não calcula nada: recebe os números da simulação (os 30 anos, os resumos e o ranking) e só explica em linguagem simples.
 
 ## API
 
@@ -56,7 +80,7 @@ curl -X POST localhost:8080/api/simulacoes -H 'Content-Type: application/json' \
   - `servico/SimuladorService` — monta a linha do tempo.
   - `servico/RecomendacaoService` — ranking das culturas.
   - `clima/ClimaProvider` — de onde vem o clima. `MockClimaProvider` (falso) ou `HttpClimaProvider` (serviço do pessoal dos dados).
-  - `agente/AgenteDemonstracao` — responde perguntas por regras fixas. Trocar por um LLM depois, mantendo a interface `Agente`.
+  - `agente/AgenteAnthropic` — agente com IA (API da Anthropic). `agente/AgenteDemonstracao` — responde por regras fixas. `agente/AgenteComReserva` — usa a IA e cai na demonstração se não houver chave, der erro ou demorar.
 - `api/` — controllers REST.
 - `config/` — liga as peças. Trocar a fonte de clima: `fieldshift.clima.fonte` em `application.properties`.
 
@@ -64,5 +88,5 @@ curl -X POST localhost:8080/api/simulacoes -H 'Content-Type: application/json' \
 
 - [ ] Dados reais da NASA (ver contrato).
 - [ ] Tabela de culturas com valores do EcoCrop (FAO) / ZARC (Embrapa).
-- [ ] Agente com LLM (chave da API só no backend).
+- [x] Agente com LLM (chave da API só no backend).
 - [ ] Deploy para a demo.
