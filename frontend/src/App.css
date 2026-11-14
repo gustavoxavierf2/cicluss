@@ -2161,3 +2161,260 @@
     display: none;
   }
 }
+
+/* =====================================================================
+   Visões Rotação, O que plantar e Planejamento no mesmo estilo simples.
+   ===================================================================== */
+.titulo-visao {
+  font-size: 1.3rem;
+  line-height: 1.2;
+  margin-bottom: 4px;
+}
+
+.botao-claro {
+  border: 2px solid var(--verde-escuro);
+  border-radius: 999px;
+  background: none;
+  color: var(--verde-escuro);
+  font: inherit;
+  font-weight: 700;
+  padding: 7px 16px;
+  cursor: pointer;
+}
+
+.botao-claro:hover {
+  background: var(--verde-escuro);
+  color: var(--areia-clara);
+}
+
+/* quadros de número grande */
+.quadros {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin: 0;
+  width: 100%;
+}
+
+.quadros--tres {
+  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+}
+
+.quadros div {
+  background: var(--fundo);
+  border-radius: 12px;
+  padding: 8px 12px;
+}
+
+.quadros dt {
+  font-size: 0.85rem;
+  color: var(--texto-suave);
+}
+
+.quadros dd {
+  margin: 0;
+  font-size: 1.3rem;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+
+.quadros__negativo dd {
+  color: var(--terracota-texto);
+}
+
+/* "entender por quê": o texto longo fica guardado */
+.porque {
+  width: 100%;
+  font-size: 0.95rem;
+}
+
+.porque summary {
+  cursor: pointer;
+  font-weight: 600;
+  color: var(--verde-escuro);
+  text-decoration: underline;
+  width: fit-content;
+}
+
+.porque ul {
+  margin: 8px 0 0;
+  padding-left: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.aviso-simples {
+  background: var(--dourado-claro);
+  border-radius: 12px;
+  padding: 10px 14px;
+}
+
+/* ---------- O que plantar ---------- */
+.ranking__lista {
+  list-style: none;
+  padding: 0;
+  margin: 14px 0 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.cartao-rank {
+  display: grid;
+  grid-template-columns: 64px 1fr;
+  gap: 8px 14px;
+  align-items: center;
+  padding: 12px 14px;
+  border-radius: 16px;
+  background: var(--campo);
+  border: 1px solid var(--borda);
+}
+
+.cartao-rank .veredito__selo {
+  font-size: 1.4rem;
+}
+
+.cartao-rank__texto {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.cartao-rank__texto strong {
+  font-size: 1.35rem;
+  line-height: 1.15;
+}
+
+.cartao-rank__anos b {
+  font-size: 1.2rem;
+}
+
+.cartao-rank .ranking__trilho {
+  height: 12px;
+  margin: 2px 0;
+}
+
+.cartao-rank__cuidado {
+  color: var(--texto-suave);
+}
+
+.cartao-rank__botoes {
+  grid-column: 1 / -1;
+  display: flex;
+  gap: 10px;
+}
+
+/* ---------- Rotação ---------- */
+.destaque {
+  display: grid;
+  grid-template-columns: 64px 1fr;
+  gap: 14px;
+  align-items: center;
+  padding: 14px;
+  border-radius: 16px;
+  background: var(--oliva-claro);
+  border: 2px solid var(--bom);
+}
+
+.destaque__rotulo {
+  font-size: 0.85rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--texto-suave);
+}
+
+.destaque strong {
+  display: block;
+  font-size: 1.5rem;
+  line-height: 1.15;
+}
+
+.estrategia__topo strong {
+  font-size: 1.3rem;
+}
+
+.estrategia__ano {
+  height: 30px;
+  font-size: 0.78rem;
+}
+
+.sinais {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  width: 100%;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.sinal-curto {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 600;
+}
+
+.sinal-curto .sinal__marca {
+  width: 26px;
+  height: 26px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  font-size: 0.85rem;
+  font-weight: 800;
+}
+
+.sinal-curto--bom .sinal__marca {
+  background: var(--bom);
+}
+
+.sinal-curto--atencao .sinal__marca {
+  background: var(--atencao);
+}
+
+.sinal-curto--ruim .sinal__marca {
+  background: var(--ruim);
+  color: var(--areia-clara);
+}
+
+.sinal-curto--ruim {
+  color: var(--texto-suave);
+}
+
+/* ---------- Planejamento ---------- */
+.plano__anos .veredito {
+  list-style: none;
+}
+
+.veredito__linha {
+  grid-column: 1 / -1;
+}
+
+.plano .controle__topo {
+  font-size: 1rem;
+}
+
+.plano .controle select,
+.plano .opcao {
+  font-size: 1.05rem;
+  padding: 10px 12px;
+}
+
+.plano .opcao {
+  padding: 10px 4px;
+  white-space: nowrap;
+}
+
+.plano__avisos h3 {
+  font-size: 1.1rem;
+}
+
+.plano__avisos ul {
+  font-size: 1rem;
+  gap: 8px;
+}

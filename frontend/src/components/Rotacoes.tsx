@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { api } from '../api'
-import type { ComparacaoEstrategias, Estrategia, Ponto, TipoSolo } from '../tipos'
+import type { ComparacaoEstrategias, Estrategia, Nivel, Ponto, TipoSolo } from '../tipos'
 import { NOME_NIVEL } from '../tipos'
 import { reais } from '../formato'
 
@@ -13,7 +13,15 @@ interface Props {
   aoPlanejar: (culturaId: string) => void
 }
 
-const SINAL: Record<string, string> = { BOM: '✓', ATENCAO: '!', RUIM: '✕' }
+const SIMBOLO: Record<Nivel, string> = { BOM: '✓', ATENCAO: '!', RUIM: '✕' }
+
+/** Nomes do dia a dia para os sinais de saúde da terra que vêm do servidor. */
+const NOME_DO_SINAL: Record<string, string> = {
+  'Nitrogênio': 'Adubo natural',
+  'Pragas e doenças': 'Menos praga',
+  'Terra coberta': 'Terra coberta',
+  'Palha e matéria orgânica': 'Palha na terra',
+}
 
 function Cartao({ e, indicada, aoPlanejar }: { e: Estrategia; indicada: boolean; aoPlanejar: (id: string) => void }) {
   const total = e.resumo.anosBons + e.resumo.anosAtencao + e.resumo.anosRuins
@@ -22,15 +30,14 @@ function Cartao({ e, indicada, aoPlanejar }: { e: Estrategia; indicada: boolean;
       <div className="estrategia__topo">
         <strong>{e.nome}</strong>
         {e.atual && <span className="etiqueta">o que você faz hoje</span>}
-        {indicada && <span className="etiqueta etiqueta--indicada">mais indicada</span>}
+        {indicada && <span className="etiqueta etiqueta--indicada">melhor opção</span>}
       </div>
-      <p className="estrategia__descricao">{e.descricao}</p>
 
       <div className="estrategia__faixa" role="img"
         aria-label={`${e.resumo.anosBons} anos bons, ${e.resumo.anosAtencao} de atenção e ${e.resumo.anosRuins} ruins`}>
         {e.anos.map((a) => (
           <span key={a.ano} className={`estrategia__ano estrategia__ano--${a.nivel.toLowerCase()}`}
-            title={`${a.ano}: ${a.cultura}, ${NOME_NIVEL[a.nivel].toLowerCase()} (nota ${a.nota})`}>
+            title={`${a.ano}: ${a.cultura}, ${NOME_NIVEL[a.nivel].toLowerCase()}`}>
             {a.cultura.slice(0, 2)}
           </span>
         ))}
@@ -40,41 +47,41 @@ function Cartao({ e, indicada, aoPlanejar }: { e: Estrategia; indicada: boolean;
         <span>{e.anos[e.anos.length - 1]?.ano}</span>
       </div>
 
-      <div className="plano__numeros">
+      <dl className="quadros">
         <div>
-          <span>Anos bons</span>
-          <b>{e.resumo.anosBons} de {total}</b>
-        </div>
-        <div>
-          <span>Anos ruins</span>
-          <b>{e.resumo.anosRuins}</b>
+          <dt>Anos bons</dt>
+          <dd>{e.resumo.anosBons} de {total}</dd>
         </div>
         {e.saldoTotal !== null && (
-          <div>
-            <span>{e.saldoTotal < 0 ? 'Prejuízo estimado' : 'Sobra estimada'}</span>
-            <b>{reais(Math.abs(e.saldoTotal))}</b>
+          <div className={e.saldoTotal < 0 ? 'quadros__negativo' : undefined}>
+            <dt>{e.saldoTotal < 0 ? 'Prejuízo' : 'Sobra'}</dt>
+            <dd>{reais(Math.abs(e.saldoTotal))}</dd>
           </div>
         )}
-        <div>
-          <span>Terra descoberta</span>
-          <b>{e.mesesDescoberto} {e.mesesDescoberto === 1 ? 'mês' : 'meses'} por ano</b>
-        </div>
-      </div>
+      </dl>
 
-      <ul className="estrategia__solo">
+      <ul className="sinais" aria-label="Saúde da terra">
         {e.solo.map((s) => (
-          <li key={s.nome} className={`sinal sinal--${s.nivel.toLowerCase()}`}>
-            <span className="sinal__marca" aria-hidden="true">{SINAL[s.nivel]}</span>
-            <span>
-              <b>{s.nome}:</b> {s.texto}
-            </span>
+          <li key={s.nome} className={`sinal-curto sinal-curto--${s.nivel.toLowerCase()}`}>
+            <span className="sinal__marca" aria-hidden="true">{SIMBOLO[s.nivel]}</span>
+            {NOME_DO_SINAL[s.nome] ?? s.nome}
           </li>
         ))}
       </ul>
 
+      <details className="porque">
+        <summary>Entender por quê</summary>
+        <ul>
+          <li>{e.descricao}</li>
+          {e.solo.map((s) => (
+            <li key={s.nome}>{s.texto}</li>
+          ))}
+        </ul>
+      </details>
+
       {!e.atual && (
-        <button type="button" className="link" onClick={() => aoPlanejar(e.sequencia[0].id)}>
-          planejar os próximos anos com esta rotação
+        <button type="button" className="botao-claro" onClick={() => aoPlanejar(e.sequencia[0].id)}>
+          Planejar com esta
         </button>
       )}
     </li>
@@ -104,12 +111,13 @@ export function Rotacoes({ ponto, solo, hectares, culturaPlantadaId, culturaTest
     }
   }, [ponto, solo, hectares, culturaPlantadaId, culturaTesteId])
 
+  const indicada = comparacao?.estrategias.find((e) => e.id === comparacao.recomendadaId)
+
   return (
     <section className="rotacoes">
-      <h2>Qual rotação de culturas cuida melhor da terra?</h2>
+      <h2 className="titulo-visao">Trocar de planta de um ano para o outro</h2>
       <p className="nota-rodape">
-        Cada opção é testada com o clima que realmente aconteceu neste terreno. Cada quadradinho é um ano: as duas letras são a
-        cultura plantada e a cor mostra se o ano foi bom, de atenção ou ruim.
+        Cada quadradinho é um ano que já passou. As letras são a planta daquele ano e a cor mostra como foi.
       </p>
 
       {erro && <div className="erro" role="alert"><span>{erro}</span></div>}
@@ -117,10 +125,16 @@ export function Rotacoes({ ponto, solo, hectares, culturaPlantadaId, culturaTest
 
       {comparacao && !erro && (
         <div className={carregando ? 'plano__corpo painel__corpo--carregando' : 'plano__corpo'}>
-          <div className="plano__resumo">
-            <p><b>{comparacao.porque}</b></p>
-            {comparacao.epocaSeca && <p className="rotacoes__epoca">{comparacao.epocaSeca}</p>}
-          </div>
+          {indicada && (
+            <div className="destaque">
+              <span className="veredito__selo veredito__selo--bom" aria-hidden="true">✓</span>
+              <div>
+                <span className="destaque__rotulo">Melhor opção</span>
+                <strong>{indicada.nome}</strong>
+                <p>{comparacao.porque}</p>
+              </div>
+            </div>
+          )}
 
           <ol className="rotacoes__lista">
             {comparacao.estrategias.map((e) => (
@@ -128,9 +142,9 @@ export function Rotacoes({ ponto, solo, hectares, culturaPlantadaId, culturaTest
             ))}
           </ol>
 
+          {comparacao.epocaSeca && <p className="aviso-simples">{comparacao.epocaSeca}</p>}
           <p className="nota-rodape">
-            Os sinais de saúde da terra são regras simples (tipo de planta e tempo que ela fica no chão), não análise de
-            solo. A sobra em reais usa preços e custos de exemplo.
+            Os sinais da terra são regras simples, não exame de solo. O dinheiro usa preços de exemplo.
           </p>
         </div>
       )}
