@@ -101,7 +101,9 @@ Arquivo: `backend/src/main/resources/culturas.json`. Hoje ele tem **valores de e
   "chuva": { "idealMin": 600, "idealMax": 1200, "absMin": 400, "absMax": 1800 },
   "solos": ["ARGILOSO", "MISTO"],
   "cicloDias": 120,
-  "fonte": "EcoCrop (FAO), ficha de Zea mays, consultada em 14/11/2026"
+  "fonte": "EcoCrop (FAO), ficha de Zea mays, consultada em 14/11/2026",
+  "grupoRotacao": "GRAMINEA",
+  "economia": { "produtividadeKgHa": 5000, "precoPorKg": 1.00, "custoPorHa": 3500, "fonte": "CONAB, safra 2025/26, Bahia" }
 }
 ```
 
@@ -114,6 +116,13 @@ Arquivo: `backend/src/main/resources/culturas.json`. Hoje ele tem **valores de e
 | `solos` | `ARENOSO`, `ARGILOSO` e/ou `MISTO`, a partir da textura de solo da ficha |
 | `cicloDias` | Crop cycle (dias); para perene, use 365 |
 | `fonte` | Ficha e data consultada (para citar no pitch) |
+| `grupoRotacao` | `GRAMINEA`, `LEGUMINOSA`, `RAIZ` ou `PERENE`. Usado na rotação: o plano não repete o mesmo grupo em anos seguidos; `PERENE` não entra em rotação |
+| `economia.produtividadeKgHa` | Colheita de um **ano bom** na região, em kg por hectare (CONAB/IBGE) |
+| `economia.precoPorKg` | Preço de venda ao produtor, em R$ por kg |
+| `economia.custoPorHa` | Custo para plantar e colher um hectare, em R$ |
+| `economia.fonte` | De onde vieram os três valores e a data |
+
+Os valores de `economia` hoje são **de exemplo**. O site estima a safra como `produtividadeKgHa × nota do ano / 100 × hectares` e mostra venda, custo e sobra a partir daí.
 
 A ordem precisa ser `absMin ≤ idealMin ≤ idealMax ≤ absMax`, senão o backend não sobe.
 

@@ -20,7 +20,7 @@ o que plantou por último e a cultura que quer testar.
 Tabela de culturas (coração do simulador): faixas ideais e limites de temperatura e chuva, ciclo e solos,
 a partir das fichas oficiais do EcoCrop (FAO) e do ZARC (Embrapa). Os cálculos usam sempre os dados da NASA.
 
-## Funcionalidades (só estas três)
+## Funcionalidades
 1. Simulador na linha do tempo: uma barra única de anos que começa no ano atual (no meio). Para trás:
    clima que aconteceu; para frente: previsão. O passado tem uma cor sólida e o futuro outra cor,
    tracejada e apagando, para mostrar que a previsão é menos certa.
@@ -28,10 +28,19 @@ a partir das fichas oficiais do EcoCrop (FAO) e do ZARC (Embrapa). Os cálculos 
 3. Agente de IA: explica os resultados em linguagem simples e responde dúvidas. Ele NÃO calcula nada,
    só traduz os números que vieram da tabela + dados da NASA.
 
+Acrescentadas depois (14/11/2026), a pedido da equipe:
+4. Hectares e safra: o agricultor informa a área e vê, em cada ano, a safra estimada e uma ideia de
+   venda, custo e sobra em reais.
+5. Clima ajustável: no resultado, ele pode mexer na temperatura, na chuva e na umidade da terra para
+   testar um cenário que ele imagina.
+6. Planejamento com rotação: depois de decidir a cultura, ele pede um plano para 1, 3 ou 5 anos. O plano
+   alterna culturas, aponta plano B e cuidados nos anos de risco e avisa quando há previsão de prejuízo.
+
 ## Saídas
 Nota de aptidão por ano (bom/atenção/ruim), resumo "X anos bons, Y de risco", risco principal do ano
-(seca, calor, frio, chuva demais, solo pouco indicado) e o clima do ano. Produtividade em kg/ha está
-fora de propósito (exigiria modelo calibrado tipo DSSAT).
+(seca, calor, frio, chuva demais, solo pouco indicado) e o clima do ano. A safra e os valores em reais
+são uma estimativa simples (colheita de um ano bom × nota do ano × hectares), com preços e custos de
+exemplo; produtividade calibrada (tipo DSSAT) continua fora de propósito.
 
 ## Diferencial
 AgroClimate, SIMAGRI e DSSAT fazem algo parecido para técnicos e pesquisadores. O Ciclus é clique no

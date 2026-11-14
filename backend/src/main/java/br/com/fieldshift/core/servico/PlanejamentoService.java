@@ -69,12 +69,12 @@ public class PlanejamentoService {
                         ? principal.nome() + " fica no terreno vários anos, então não entra em rotação."
                         : anterior == null
                                 ? "É a cultura que você escolheu."
-                                : "A cultura que você escolheu volta depois de um ano de descanso da terra.";
+                                : "A cultura que você escolheu volta depois de um ano com outra planta no lugar.";
             } else {
                 Optional<Cultura> rotacao = culturaDeRotacao(principal, simulacoes, ano);
                 if (rotacao.isPresent()) {
                     escolhida = rotacao.get();
-                    porque = "Rotação: troca o tipo de planta para a terra descansar e cortar pragas. "
+                    porque = "Rotação: trocar o tipo de planta ajuda a terra e corta pragas. "
                             + motivoDaRotacao(escolhida, simulacoes, ano);
                 } else {
                     escolhida = principal;

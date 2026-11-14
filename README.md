@@ -23,7 +23,8 @@ Um comando só, na raiz do projeto (sobe backend e frontend juntos e mostra a UR
 
 ```powershell
 # Windows (PowerShell)
-powershell -ExecutionPolicy Bypass -File .odar.ps1
+powershell -ExecutionPolicy Bypass -File .
+odar.ps1
 ```
 
 ```bash
@@ -44,7 +45,8 @@ O chat "Tire dúvidas" usa a API da Anthropic quando a variável de ambiente `AN
 ```powershell
 # Windows (PowerShell)
 $env:ANTHROPIC_API_KEY = "sua-chave"
-powershell -ExecutionPolicy Bypass -File .odar.ps1
+powershell -ExecutionPolicy Bypass -File .
+odar.ps1
 ```
 
 ```bash
@@ -64,6 +66,8 @@ export ANTHROPIC_API_KEY="sua-chave"
 | GET | `/api/culturas` | Lista de culturas da tabela |
 | POST | `/api/simulacoes` | Linha do tempo de uma cultura no terreno (15 anos para trás e 15 para frente) |
 | POST | `/api/recomendacoes` | Ranking das culturas mais aptas para o terreno |
+| POST | `/api/cenarios` | "E se o clima fosse diferente?": mesma regra da nota com temperatura, chuva e umidade ajustadas |
+| POST | `/api/planejamentos` | Plano de plantio com rotação para os próximos 1, 3 ou 5 anos |
 | POST | `/api/agente` | Pergunta ao agente sobre os resultados |
 
 Exemplo:
@@ -73,12 +77,21 @@ curl -X POST localhost:8080/api/simulacoes -H 'Content-Type: application/json' \
   -d '{"latitude":-14.866,"longitude":-40.839,"solo":"MISTO","culturaId":"milho"}'
 ```
 
+## Safra, valores e planejamento
+
+- **Hectares e safra:** com a área informada (`hectares`), cada ano da simulação traz safra, venda, custo e sobra estimados. A conta é simples: colheita de um ano bom × nota do ano (0 a 100) × hectares. Serve para dar ideia de grandeza; **não é** produtividade calibrada (tipo DSSAT).
+- **Valores de exemplo:** produtividade, preço e custo ficam em `culturas.json` (campo `economia`) e hoje são **valores de exemplo**. Trocar por CONAB/IBGE antes de mostrar como real.
+- **Cenário:** o agricultor ajusta temperatura, chuva e umidade da terra de um ano e vê a nota e a safra com esse clima. A regra da nota é a mesma (`AptidaoCalculadora`).
+- **Planejamento:** a partir da cultura que o agricultor decidiu plantar, monta 1, 3 ou 5 anos. Regras em `core/servico/PlanejamentoService`: a escolhida entra no 1º ano e volta sempre que a rotação deixa; não se repete o mesmo grupo (`grupoRotacao`) em anos seguidos; no ano de rotação entra, entre as culturas que aguentam o clima previsto, a de maior sobra estimada; ano com previsão ruim ganha plano B e o cuidado contra o risco.
+
 ## Como o backend está organizado
 
 - `core/` — Java puro, sem Spring. É onde está a regra do simulador:
   - `servico/AptidaoCalculadora` — compara o clima do ano com a faixa da cultura e dá nota 0–100.
   - `servico/SimuladorService` — monta a linha do tempo.
   - `servico/RecomendacaoService` — ranking das culturas.
+  - `servico/SafraCalculadora` — estimativa de safra e dinheiro por hectare.
+  - `servico/PlanejamentoService` — plano de plantio com rotação.
   - `clima/ClimaProvider` — de onde vem o clima. `MockClimaProvider` (falso) ou `HttpClimaProvider` (serviço do pessoal dos dados).
   - `agente/AgenteAnthropic` — agente com IA (API da Anthropic). `agente/AgenteDemonstracao` — responde por regras fixas. `agente/AgenteComReserva` — usa a IA e cai na demonstração se não houver chave, der erro ou demorar.
 - `api/` — controllers REST.
@@ -88,5 +101,6 @@ curl -X POST localhost:8080/api/simulacoes -H 'Content-Type: application/json' \
 
 - [ ] Dados reais da NASA (ver contrato).
 - [ ] Tabela de culturas com valores do EcoCrop (FAO) / ZARC (Embrapa).
+- [ ] Produtividade, preço e custo reais (CONAB/IBGE) no lugar dos valores de exemplo.
 - [x] Agente com LLM (chave da API só no backend).
 - [ ] Deploy para a demo.
