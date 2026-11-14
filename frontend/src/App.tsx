@@ -1,0 +1,201 @@
+import { useEffect, useRef, useState } from 'react'
+import { api } from './api'
+import type { Cultura, ItemRanking, Ponto, Simulacao } from './tipos'
+import { MapaTerreno } from './components/MapaTerreno'
+import { Seletores } from './components/Seletores'
+import type { Respostas } from './components/Seletores'
+import { BarraAnos } from './components/BarraAnos'
+import { DetalheAno } from './components/DetalheAno'
+import { ResumoComparativo } from './components/ResumoComparativo'
+import { Ranking } from './components/Ranking'
+import { ChatAgente } from './components/ChatAgente'
+import type { Mensagem } from './components/ChatAgente'
+import './App.css'
+
+interface Resultado {
+  plantada: Simulacao
+  alternativa: Simulacao | null
+  ranking: ItemRanking[]
+}
+
+type Aba = 'anos' | 'plantar'
+
+export default function App() {
+  const [culturas, setCulturas] = useState<Cultura[]>([])
+  const [ponto, setPonto] = useState<Ponto | null>(null)
+  const [respostas, setRespostas] = useState<Respostas>({ solo: 'NAO_SEI', culturaPlantadaId: '', culturaTesteId: '' })
+  const [ativo, setAtivo] = useState(false)
+  const [resultado, setResultado] = useState<Resultado | null>(null)
+  const [ano, setAno] = useState(0)
+  const [aba, setAba] = useState<Aba>('anos')
+  const [carregando, setCarregando] = useState(false)
+  const [erro, setErro] = useState<string | null>(null)
+  const [mensagens, setMensagens] = useState<Mensagem[]>([])
+  const [pensando, setPensando] = useState(false)
+  const [demonstracao, setDemonstracao] = useState(true)
+  const pedido = useRef(0)
+
+  useEffect(() => {
+    api.culturas()
+      .then((lista) => {
+        setCulturas(lista)
+        setRespostas((r) => ({
+          ...r,
+          culturaPlantadaId: lista[0]?.id ?? '',
+          culturaTesteId: lista[1]?.id ?? '',
+        }))
+      })
+      .catch(() => setErro('Não consegui falar com o servidor. O backend está rodando na porta 8080?'))
+  }, [])
+
+  // Depois do primeiro "Ver resultado", mudar o terreno ou um seletor recalcula sozinho.
+  useEffect(() => {
+    if (!ativo || !ponto || !respostas.culturaPlantadaId) return
+    const meu = ++pedido.current
+    setCarregando(true)
+    setErro(null)
+    const teste = respostas.culturaTesteId || null
+    Promise.all([
+      api.simular(ponto, respostas.solo, respostas.culturaPlantadaId),
+      teste ? api.simular(ponto, respostas.solo, teste) : Promise.resolve(null),
+      api.recomendar(ponto, respostas.solo),
+    ])
+      .then(([plantada, alternativa, ranking]) => {
+        if (meu !== pedido.current) return
+        setResultado({ plantada, alternativa, ranking })
+        setAno((atual) => (plantada.anos.some((a) => a.ano === atual) ? atual : plantada.anoAtual))
+        setMensagens([])
+      })
+      .catch((e: Error) => meu === pedido.current && setErro(e.message))
+      .finally(() => meu === pedido.current && setCarregando(false))
+  }, [ativo, ponto, respostas])
+
+  function perguntar(pergunta: string) {
+    if (!ponto || !resultado) return
+    setMensagens((m) => [...m, { autor: 'voce', texto: pergunta }])
+    setPensando(true)
+    api.perguntar(pergunta, ponto, respostas.solo, respostas.culturaPlantadaId, respostas.culturaTesteId || null)
+      .then((r) => {
+        setDemonstracao(r.demonstracao)
+        setMensagens((m) => [...m, { autor: 'agente', texto: r.resposta }])
+      })
+      .catch((e: Error) => setMensagens((m) => [...m, { autor: 'agente', texto: `Não consegui responder: ${e.message}` }]))
+      .finally(() => setPensando(false))
+  }
+
+  function compararCom(culturaId: string) {
+    if (culturaId === respostas.culturaPlantadaId) return
+    setRespostas({ ...respostas, culturaTesteId: culturaId })
+    setAba('anos')
+  }
+
+  const anos = resultado?.plantada.anos ?? []
+  const sugestoes = resultado
+    ? [
+        `O que aconteceu em ${ano}?`,
+        resultado.alternativa ? 'Vale a pena trocar?' : 'Qual a melhor cultura pra mim?',
+        'E no futuro?',
+      ]
+    : []
+
+  return (
+    <div className="app">
+      <header className="topo">
+        <div className="topo__marca">
+          <span className="topo__logo" aria-hidden="true">
+            <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"
+              strokeLinecap="round" strokeLinejoin="round">
+              <path d="M20 12a8 8 0 1 1-2.34-5.66" />
+              <path d="M20 4v4h-4" />
+              <path d="M12 16c0-3 1.5-5 4-6-3 0-5 1.5-5.5 3.5C10 12 9 11.5 8 11.5c1 1 2 2.5 2 4.5" />
+            </svg>
+          </span>
+          <div>
+            <h1>Ciclus</h1>
+            <p>E se você tivesse plantado outra coisa? Simulador de culturas com dados de satélite da NASA</p>
+          </div>
+        </div>
+        <span className="topo__demo">dados de demonstração</span>
+      </header>
+
+      <Seletores
+        culturas={culturas}
+        respostas={respostas}
+        aoMudar={setRespostas}
+        podeCalcular={!!ponto && culturas.length > 0}
+        carregando={carregando}
+        aoCalcular={() => setAtivo(true)}
+      />
+
+      <main className="conteudo">
+        <section className="mapa">
+          <h2 className="secao-titulo">Onde fica o seu terreno?</h2>
+          <MapaTerreno ponto={ponto} aoEscolher={setPonto} />
+          <p className="mapa__legenda">
+            {ponto
+              ? `Terreno marcado: ${ponto.latitude.toFixed(4)}, ${ponto.longitude.toFixed(4)}. Clique em outro lugar para mudar.`
+              : 'Clique no mapa onde fica o seu terreno.'}
+          </p>
+        </section>
+
+        <section className="painel">
+          <nav className="abas" role="tablist">
+            <button type="button" role="tab" aria-selected={aba === 'anos'} className={aba === 'anos' ? 'aba aba--ativa' : 'aba'}
+              onClick={() => setAba('anos')}>
+              Ano a ano
+            </button>
+            <button type="button" role="tab" aria-selected={aba === 'plantar'} className={aba === 'plantar' ? 'aba aba--ativa' : 'aba'}
+              onClick={() => setAba('plantar')}>
+              O que plantar
+            </button>
+          </nav>
+
+          <div className={`painel__corpo ${carregando && resultado ? 'painel__corpo--carregando' : ''}`}>
+            {erro && <div className="erro" role="alert">{erro}</div>}
+
+            {!resultado && !erro && (
+              <div className="vazio">
+                <h2>Seu terreno, ano a ano</h2>
+                <ol>
+                  <li>Escolha o que você plantou e o que quer comparar, lá em cima.</li>
+                  <li>Clique no mapa onde fica o terreno.</li>
+                  <li>Aperte <b>Ver resultado</b>.</li>
+                </ol>
+                <p>
+                  Você vai arrastar uma barra de anos: para trás, vê como cada cultura teria ido com o clima que
+                  realmente aconteceu ali; para frente, vê a previsão.
+                </p>
+              </div>
+            )}
+
+            {resultado && aba === 'anos' && (
+              <>
+                <BarraAnos
+                  primeiro={anos[0].ano}
+                  ultimo={anos[anos.length - 1].ano}
+                  anoAtual={resultado.plantada.anoAtual}
+                  ano={ano}
+                  aoMudar={setAno}
+                />
+                <DetalheAno plantada={resultado.plantada} alternativa={resultado.alternativa} ano={ano} />
+                <ResumoComparativo plantada={resultado.plantada} alternativa={resultado.alternativa} />
+              </>
+            )}
+
+            {resultado && aba === 'plantar' && <Ranking itens={resultado.ranking} aoTestar={compararCom} />}
+          </div>
+        </section>
+      </main>
+
+      {resultado && (
+        <ChatAgente
+          mensagens={mensagens}
+          carregando={pensando}
+          demonstracao={demonstracao}
+          sugestoes={sugestoes}
+          aoPerguntar={perguntar}
+        />
+      )}
+    </div>
+  )
+}

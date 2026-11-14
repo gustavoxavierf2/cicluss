@@ -1,0 +1,47 @@
+[
+  {
+    "id": "milho",
+    "nome": "Milho",
+    "temperatura": { "idealMin": 18, "idealMax": 33, "absMin": 10, "absMax": 47 },
+    "chuva": { "idealMin": 600, "idealMax": 1200, "absMin": 400, "absMax": 1800 },
+    "solos": ["ARGILOSO", "MISTO"],
+    "cicloDias": 120,
+    "fonte": "EXEMPLO - trocar pelos valores da ficha EcoCrop (FAO)"
+  },
+  {
+    "id": "feijao",
+    "nome": "Feijão",
+    "temperatura": { "idealMin": 18, "idealMax": 28, "absMin": 10, "absMax": 32 },
+    "chuva": { "idealMin": 500, "idealMax": 1500, "absMin": 300, "absMax": 2500 },
+    "solos": ["ARENOSO", "ARGILOSO", "MISTO"],
+    "cicloDias": 90,
+    "fonte": "EXEMPLO - trocar pelos valores da ficha EcoCrop (FAO)"
+  },
+  {
+    "id": "cafe-arabica",
+    "nome": "Café arábica",
+    "temperatura": { "idealMin": 15, "idealMax": 24, "absMin": 10, "absMax": 30 },
+    "chuva": { "idealMin": 1200, "idealMax": 1800, "absMin": 750, "absMax": 2500 },
+    "solos": ["ARGILOSO", "MISTO"],
+    "cicloDias": 365,
+    "fonte": "EXEMPLO - trocar pelos valores da ficha EcoCrop (FAO)"
+  },
+  {
+    "id": "mandioca",
+    "nome": "Mandioca",
+    "temperatura": { "idealMin": 20, "idealMax": 29, "absMin": 10, "absMax": 35 },
+    "chuva": { "idealMin": 1000, "idealMax": 1500, "absMin": 500, "absMax": 5000 },
+    "solos": ["ARENOSO", "MISTO"],
+    "cicloDias": 360,
+    "fonte": "EXEMPLO - trocar pelos valores da ficha EcoCrop (FAO)"
+  },
+  {
+    "id": "sorgo",
+    "nome": "Sorgo",
+    "temperatura": { "idealMin": 27, "idealMax": 35, "absMin": 8, "absMax": 40 },
+    "chuva": { "idealMin": 500, "idealMax": 1000, "absMin": 300, "absMax": 3000 },
+    "solos": ["ARENOSO", "ARGILOSO", "MISTO"],
+    "cicloDias": 110,
+    "fonte": "EXEMPLO - trocar pelos valores da ficha EcoCrop (FAO)"
+  }
+]
