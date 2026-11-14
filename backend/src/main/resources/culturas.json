@@ -6,7 +6,9 @@
     "chuva": { "idealMin": 600, "idealMax": 1200, "absMin": 400, "absMax": 1800 },
     "solos": ["ARGILOSO", "MISTO"],
     "cicloDias": 120,
-    "fonte": "EXEMPLO - trocar pelos valores da ficha EcoCrop (FAO)"
+    "fonte": "EXEMPLO - trocar pelos valores da ficha EcoCrop (FAO)",
+    "grupoRotacao": "GRAMINEA",
+    "economia": { "produtividadeKgHa": 5000, "precoPorKg": 1.00, "custoPorHa": 3500, "fonte": "EXEMPLO - trocar por valores da CONAB/IBGE para a região" }
   },
   {
     "id": "feijao",
@@ -15,7 +17,9 @@
     "chuva": { "idealMin": 500, "idealMax": 1500, "absMin": 300, "absMax": 2500 },
     "solos": ["ARENOSO", "ARGILOSO", "MISTO"],
     "cicloDias": 90,
-    "fonte": "EXEMPLO - trocar pelos valores da ficha EcoCrop (FAO)"
+    "fonte": "EXEMPLO - trocar pelos valores da ficha EcoCrop (FAO)",
+    "grupoRotacao": "LEGUMINOSA",
+    "economia": { "produtividadeKgHa": 1500, "precoPorKg": 4.00, "custoPorHa": 3500, "fonte": "EXEMPLO - trocar por valores da CONAB/IBGE para a região" }
   },
   {
     "id": "cafe-arabica",
@@ -24,7 +28,9 @@
     "chuva": { "idealMin": 1200, "idealMax": 1800, "absMin": 750, "absMax": 2500 },
     "solos": ["ARGILOSO", "MISTO"],
     "cicloDias": 365,
-    "fonte": "EXEMPLO - trocar pelos valores da ficha EcoCrop (FAO)"
+    "fonte": "EXEMPLO - trocar pelos valores da ficha EcoCrop (FAO)",
+    "grupoRotacao": "PERENE",
+    "economia": { "produtividadeKgHa": 1500, "precoPorKg": 20.00, "custoPorHa": 15000, "fonte": "EXEMPLO - trocar por valores da CONAB/IBGE para a região" }
   },
   {
     "id": "mandioca",
@@ -33,7 +39,9 @@
     "chuva": { "idealMin": 1000, "idealMax": 1500, "absMin": 500, "absMax": 5000 },
     "solos": ["ARENOSO", "MISTO"],
     "cicloDias": 360,
-    "fonte": "EXEMPLO - trocar pelos valores da ficha EcoCrop (FAO)"
+    "fonte": "EXEMPLO - trocar pelos valores da ficha EcoCrop (FAO)",
+    "grupoRotacao": "RAIZ",
+    "economia": { "produtividadeKgHa": 15000, "precoPorKg": 0.60, "custoPorHa": 5000, "fonte": "EXEMPLO - trocar por valores da CONAB/IBGE para a região" }
   },
   {
     "id": "sorgo",
@@ -42,6 +50,8 @@
     "chuva": { "idealMin": 500, "idealMax": 1000, "absMin": 300, "absMax": 3000 },
     "solos": ["ARENOSO", "ARGILOSO", "MISTO"],
     "cicloDias": 110,
-    "fonte": "EXEMPLO - trocar pelos valores da ficha EcoCrop (FAO)"
+    "fonte": "EXEMPLO - trocar pelos valores da ficha EcoCrop (FAO)",
+    "grupoRotacao": "GRAMINEA",
+    "economia": { "produtividadeKgHa": 3500, "precoPorKg": 0.80, "custoPorHa": 2200, "fonte": "EXEMPLO - trocar por valores da CONAB/IBGE para a região" }
   }
 ]

@@ -37,8 +37,10 @@ public class AgenteAnthropic implements Agente {
             "evapotranspiração" ou "projeção"; prefira "água que a planta perde" e "previsão".
             - Sempre que falar de um ano marcado como previsão, deixe claro que é previsão e que pode \
             não acontecer assim.
-            - Não fale de preço, venda, mercado ou lucro: o sistema só considera clima e solo. Se \
-            perguntarem sobre isso, explique essa limitação em uma frase.
+            - Quando a mensagem trouxer safra e valores em reais, você pode citá-los, sempre dizendo \
+            que é uma estimativa feita com preços e custos de exemplo. Fora isso, não fale de preço de \
+            mercado, de onde vender ou de quanto o preço vai valer no futuro: o sistema não tem essa \
+            informação.
             """;
 
     static final String AVISO_DEMONSTRACAO = """

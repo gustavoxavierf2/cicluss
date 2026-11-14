@@ -4,6 +4,7 @@ import br.com.fieldshift.core.modelo.ClimaAnual;
 import br.com.fieldshift.core.modelo.ItemRanking;
 import br.com.fieldshift.core.modelo.ResultadoAno;
 import br.com.fieldshift.core.modelo.Resumo;
+import br.com.fieldshift.core.modelo.Safra;
 import br.com.fieldshift.core.modelo.Simulacao;
 import br.com.fieldshift.core.servico.Textos;
 
@@ -49,8 +50,13 @@ public final class ContextoEmTexto {
         sb.append(titulo).append(": ").append(s.cultura().nome()).append('\n');
         sb.append("Resumo dos anos que já aconteceram: ").append(resumo(s.resumoPassado())).append('\n');
         sb.append("Resumo dos anos de previsão: ").append(resumo(s.resumoFuturo())).append('\n');
+        if (!s.safras().isEmpty()) {
+            sb.append(String.format(Locale.ROOT, "Área informada: %.2f hectares. ", s.hectares()))
+                    .append("A safra e os valores em R$ são ESTIMATIVAS feitas com preços e custos de exemplo.\n");
+        }
         sb.append("Ano a ano (nota de 0 a 100):\n");
-        for (ResultadoAno a : s.anos()) {
+        for (int i = 0; i < s.anos().size(); i++) {
+            ResultadoAno a = s.anos().get(i);
             ClimaAnual c = a.clima();
             sb.append(a.ano()).append(a.projetado() ? " | previsão" : " | aconteceu")
                     .append(" | nota ").append(a.nota())
@@ -61,7 +67,13 @@ public final class ContextoEmTexto {
                                     + " | umidade do solo %.2f (0 seco, 1 encharcado) | água que a planta perde %.0f mm",
                             c.precipitacao(), c.temperaturaMedia(), c.temperaturaMinima(), c.temperaturaMaxima(),
                             c.umidadeSolo(), c.evapotranspiracao()))
-                    .append(" | ").append(a.motivo()).append('\n');
+                    .append(" | ").append(a.motivo());
+            if (!s.safras().isEmpty()) {
+                Safra f = s.safras().get(i);
+                sb.append(" | safra estimada ").append(f.producaoKg()).append(" kg, venda R$ ").append(f.receita())
+                        .append(", custo R$ ").append(f.custo()).append(", sobra R$ ").append(f.saldo());
+            }
+            sb.append('\n');
         }
         sb.append('\n');
     }

@@ -16,7 +16,30 @@ public final class Requisicoes {
             @NotNull @DecimalMin("-90") @DecimalMax("90") Double latitude,
             @NotNull @DecimalMin("-180") @DecimalMax("180") Double longitude,
             TipoSolo solo,
-            @NotBlank String culturaId) {
+            @NotBlank String culturaId,
+            @DecimalMin("0.01") @DecimalMax("100000") Double hectares) {
+    }
+
+    /** "E se o clima fosse assim?": valores nulos mantêm os do ano base. */
+    public record Cenario(
+            @NotNull @DecimalMin("-90") @DecimalMax("90") Double latitude,
+            @NotNull @DecimalMin("-180") @DecimalMax("180") Double longitude,
+            TipoSolo solo,
+            @NotBlank String culturaId,
+            @DecimalMin("0.01") @DecimalMax("100000") Double hectares,
+            @NotNull Integer anoBase,
+            Double temperaturaMedia,
+            Double precipitacao,
+            Double umidadeSolo) {
+    }
+
+    public record Planejamento(
+            @NotNull @DecimalMin("-90") @DecimalMax("90") Double latitude,
+            @NotNull @DecimalMin("-180") @DecimalMax("180") Double longitude,
+            TipoSolo solo,
+            @DecimalMin("0.01") @DecimalMax("100000") Double hectares,
+            @NotBlank String culturaPrincipalId,
+            @NotNull Integer anos) {
     }
 
     public record Recomendacao(
@@ -31,7 +54,8 @@ public final class Requisicoes {
             @NotNull @DecimalMin("-180") @DecimalMax("180") Double longitude,
             TipoSolo solo,
             @NotBlank String culturaPlantadaId,
-            String culturaTesteId) {
+            String culturaTesteId,
+            @DecimalMin("0.01") @DecimalMax("100000") Double hectares) {
     }
 
     public record Resposta(String resposta, boolean demonstracao) {

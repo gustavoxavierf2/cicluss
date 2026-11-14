@@ -6,6 +6,7 @@ import br.com.fieldshift.core.clima.HttpClimaProvider;
 import br.com.fieldshift.core.clima.MockClimaProvider;
 import br.com.fieldshift.core.servico.AptidaoCalculadora;
 import br.com.fieldshift.core.servico.CulturaRepository;
+import br.com.fieldshift.core.servico.PlanejamentoService;
 import br.com.fieldshift.core.servico.RecomendacaoService;
 import br.com.fieldshift.core.servico.SimuladorService;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -67,6 +68,11 @@ public class CoreConfig {
     @Bean
     public RecomendacaoService recomendacaoService(SimuladorService simulador, CulturaRepository culturas) {
         return new RecomendacaoService(simulador, culturas);
+    }
+
+    @Bean
+    public PlanejamentoService planejamentoService(SimuladorService simulador, CulturaRepository culturas) {
+        return new PlanejamentoService(simulador, culturas);
     }
 
     /**
