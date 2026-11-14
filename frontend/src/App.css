@@ -1645,8 +1645,128 @@
   bottom: var(--margem);
 }
 
+/* ---------- mapa: chuva animada, marcador e controle ---------- */
+.mapa-terreno {
+  position: relative;
+  height: 100%;
+}
+
+/* Um quadro por dia; trocar a opacidade devagar faz a chuva "andar" sem piscar. */
+.chuva-quadro {
+  transition: opacity 0.7s linear;
+  /* A imagem da NASA vem em quadradinhos verdes de ~10 km: o desfoque alisa e o giro de cor deixa azul, cor de chuva. */
+  filter: blur(7px) hue-rotate(110deg) saturate(1.4);
+  pointer-events: none;
+}
+
+.marcador-pulso {
+  animation: pulso 1.8s ease-out infinite;
+}
+
+@keyframes pulso {
+  from {
+    stroke-width: 2;
+    stroke-opacity: 0.9;
+  }
+  to {
+    stroke-width: 34;
+    stroke-opacity: 0;
+  }
+}
+
+.chuva-controle {
+  position: fixed;
+  z-index: 1050;
+  top: var(--margem);
+  left: calc(var(--largura-menu) + 2 * var(--margem));
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px 8px 12px;
+  border-radius: 999px;
+  background: var(--vidro-escuro);
+  backdrop-filter: blur(10px);
+  color: var(--areia-clara);
+  box-shadow: var(--sombra-flutuante);
+  font-size: 0.82rem;
+}
+
+.chuva-controle__texto {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.2;
+}
+
+.chuva-controle__texto span {
+  opacity: 0.8;
+  font-variant-numeric: tabular-nums;
+  min-width: 13ch;
+}
+
+.chuva-controle__tocar {
+  width: 32px;
+  height: 32px;
+  display: grid;
+  place-items: center;
+  border: 0;
+  border-radius: 50%;
+  background: var(--areia-clara);
+  color: var(--verde-escuro);
+  cursor: pointer;
+}
+
+.chuva-controle__dias {
+  width: 110px;
+  accent-color: var(--amarelo-dourado);
+}
+
+.chuva-controle__ligar {
+  border: 1px solid rgb(246 239 230 / 35%);
+  border-radius: 999px;
+  background: none;
+  color: inherit;
+  font: inherit;
+  padding: 5px 12px;
+  cursor: pointer;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .marcador-pulso {
+    animation: none;
+    stroke-opacity: 0;
+  }
+  .chuva-quadro {
+    transition: none;
+  }
+}
+
+/* Telas médias: o controle da chuva encolhe e os botões do mapa descem para não encostar nele. */
+@media (max-width: 1500px) {
+  .chuva-controle__dias {
+    display: none;
+  }
+}
+
+@media (min-width: 1101px) and (max-width: 1350px) {
+  .app--painel .leaflet-top.leaflet-right {
+    top: calc(var(--margem) + 58px);
+  }
+}
+
 /* ---------- telas estreitas: mapa em cima e o resto empilhado ---------- */
 @media (max-width: 1100px) {
+  .chuva-controle {
+    position: absolute;
+    top: auto;
+    left: 10px;
+    bottom: 26px;
+    backdrop-filter: none;
+  }
+
+  .chuva-controle__dias {
+    display: none;
+  }
+
   .palco {
     position: static;
     height: 46vh;
