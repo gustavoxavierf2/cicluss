@@ -59,6 +59,21 @@ export ANTHROPIC_API_KEY="sua-chave"
 - O modelo é configurável em `backend/src/main/resources/application.properties`: `fieldshift.agente.modelo` (padrão `claude-sonnet-5-5`).
 - A IA não calcula nada: recebe os números da simulação (os 30 anos, os resumos e o ranking) e só explica em linguagem simples.
 
+## Como publicar na internet
+
+O `Dockerfile` da raiz monta um site único: compila o frontend e coloca dentro do backend, que serve a página e a API na mesma porta (variável `PORT`, padrão 8080).
+
+No [Render](https://render.com) (plano gratuito):
+
+1. Crie a conta e conecte o GitHub.
+2. **New > Blueprint**, escolha este repositório. O `render.yaml` já diz o que criar.
+3. Quando pedir `ANTHROPIC_API_KEY`, cole a chave para o chat usar IA ou deixe vazio (modo demonstração).
+4. Espere o primeiro deploy (uns 5 a 10 minutos). O endereço fica no formato `https://ciclus-xxxx.onrender.com`.
+
+No plano gratuito o site dorme depois de 15 minutos sem uso; a primeira visita depois disso demora cerca de 1 minuto para acordar. Cada push na `main` publica de novo.
+
+Para testar a imagem na sua máquina: `docker build -t ciclus . && docker run -p 8080:8080 ciclus`.
+
 ## API
 
 | Método | Caminho | O que faz |

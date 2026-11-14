@@ -1,0 +1,11 @@
+# Hospedagem no Render (https://render.com): New > Blueprint > escolher este repositório.
+services:
+  - type: web
+    name: ciclus
+    runtime: docker
+    plan: free
+    healthCheckPath: /api/culturas
+    envVars:
+      # Opcional: chave da Anthropic para o chat usar IA. Sem ela, o chat fica no modo demonstração.
+      - key: ANTHROPIC_API_KEY
+        sync: false
