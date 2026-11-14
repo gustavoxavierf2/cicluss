@@ -16,6 +16,12 @@ public class ApiExceptionHandler {
         return ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, e.getMessage());
     }
 
+    /** Falha ao buscar dados de clima (serviço fora do ar, formato errado). */
+    @ExceptionHandler(IllegalStateException.class)
+    public ProblemDetail dadosIndisponiveis(IllegalStateException e) {
+        return ProblemDetail.forStatusAndDetail(HttpStatus.BAD_GATEWAY, e.getMessage());
+    }
+
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ProblemDetail validacao(MethodArgumentNotValidException e) {
         String detalhe = e.getBindingResult().getFieldErrors().stream()

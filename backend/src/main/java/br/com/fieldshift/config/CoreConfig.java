@@ -3,12 +3,14 @@ package br.com.fieldshift.config;
 import br.com.fieldshift.core.agente.Agente;
 import br.com.fieldshift.core.agente.AgenteDemonstracao;
 import br.com.fieldshift.core.clima.ClimaProvider;
+import br.com.fieldshift.core.clima.HttpClimaProvider;
 import br.com.fieldshift.core.clima.MockClimaProvider;
 import br.com.fieldshift.core.servico.AptidaoCalculadora;
 import br.com.fieldshift.core.servico.CulturaRepository;
 import br.com.fieldshift.core.servico.RecomendacaoService;
 import br.com.fieldshift.core.servico.SimuladorService;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.io.ClassPathResource;
@@ -23,9 +25,24 @@ import java.time.Clock;
 @Configuration
 public class CoreConfig {
 
+    /**
+     * fieldshift.clima.fonte=mock  → dados falsos (padrão)
+     * fieldshift.clima.fonte=http  → serviço do pessoal dos dados em fieldshift.clima.url
+     */
     @Bean
-    public ClimaProvider climaProvider() {
-        return new MockClimaProvider();
+    public ClimaProvider climaProvider(@Value("${fieldshift.clima.fonte:mock}") String fonte,
+                                       @Value("${fieldshift.clima.url:}") String url,
+                                       ObjectMapper mapper) {
+        return switch (fonte) {
+            case "mock" -> new MockClimaProvider();
+            case "http" -> {
+                if (url.isBlank()) {
+                    throw new IllegalStateException("fieldshift.clima.fonte=http exige fieldshift.clima.url");
+                }
+                yield new HttpClimaProvider(url, mapper);
+            }
+            default -> throw new IllegalStateException("fieldshift.clima.fonte desconhecida: " + fonte);
+        };
     }
 
     @Bean
