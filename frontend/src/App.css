@@ -1808,3 +1808,356 @@
     bottom: 12px;
   }
 }
+
+/* =====================================================================
+   Resposta simples: letras grandes, selos de cor e poucos números.
+   ===================================================================== */
+.app--mapa {
+  --largura-painel: 540px;
+}
+
+.app--painel-grande {
+  --largura-painel: min(900px, calc(100vw - var(--largura-menu) - 3 * var(--margem)));
+}
+
+/* Com o painel aumentado quase não sobra mapa: o controle da chuva sai para não ficar por baixo. */
+.app--painel.app--painel-grande .chuva-controle {
+  display: none;
+}
+
+/* Tudo dentro do painel cresce junto; no modo aumentado cresce mais. */
+.app--mapa .painel__corpo {
+  zoom: 1.12;
+}
+
+.app--painel-grande .painel__corpo {
+  zoom: 1.3;
+}
+
+.painel__acoes {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.painel__aumentar {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border: 1px solid rgb(246 239 230 / 40%);
+  border-radius: 999px;
+  background: none;
+  color: inherit;
+  font: inherit;
+  font-weight: 600;
+  font-size: 0.9rem;
+  padding: 6px 12px;
+  cursor: pointer;
+}
+
+.painel__aumentar:hover {
+  background: rgb(246 239 230 / 14%);
+}
+
+.painel__cabecalho h2 {
+  font-size: 1.2rem;
+}
+
+.cor-bom {
+  color: #3f6f4a;
+}
+
+.cor-atencao {
+  color: #a8601f;
+}
+
+.cor-ruim {
+  color: var(--terracota-texto);
+}
+
+/* ---------- guia do começo ---------- */
+.guia {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.guia__tatu {
+  width: 120px;
+  height: auto;
+  align-self: center;
+}
+
+.guia h2 {
+  font-size: 1.35rem;
+  text-align: center;
+}
+
+.passos {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.passo {
+  display: grid;
+  grid-template-columns: 48px 1fr;
+  gap: 14px;
+  align-items: center;
+  padding: 12px 14px;
+  border-radius: 14px;
+  background: var(--fundo);
+  border: 2px solid transparent;
+}
+
+.passo__numero {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: var(--verde-escuro);
+  color: var(--areia-clara);
+  font-size: 1.5rem;
+  font-weight: 800;
+}
+
+.passo b {
+  display: block;
+  font-size: 1.15rem;
+}
+
+.passo span:not(.passo__numero) {
+  color: var(--texto-suave);
+}
+
+.passo--feito {
+  border-color: var(--bom);
+  background: var(--oliva-claro);
+}
+
+.passo--feito .passo__numero {
+  background: var(--bom);
+  color: var(--texto);
+}
+
+.guia__fim {
+  font-size: 1.05rem;
+  text-align: center;
+}
+
+/* ---------- resposta do ano ---------- */
+.detalhe__cabecalho h2 {
+  font-size: 2.2rem;
+}
+
+.vereditos {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.veredito {
+  display: grid;
+  grid-template-columns: 64px 1fr;
+  gap: 6px 14px;
+  align-items: center;
+  padding: 14px;
+  border-radius: 16px;
+  border: 2px solid;
+}
+
+.veredito--bom {
+  background: var(--oliva-claro);
+  border-color: var(--bom);
+}
+
+.veredito--atencao {
+  background: var(--dourado-claro);
+  border-color: var(--atencao);
+}
+
+.veredito--ruim {
+  background: var(--ruim-claro);
+  border-color: var(--ruim);
+}
+
+.veredito--previsao {
+  border-style: dashed;
+}
+
+.veredito__selo {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  font-size: 2rem;
+  font-weight: 800;
+  color: var(--texto);
+}
+
+.veredito__selo--bom {
+  background: var(--bom);
+}
+
+.veredito__selo--atencao {
+  background: var(--atencao);
+}
+
+.veredito__selo--ruim {
+  background: var(--ruim);
+  color: var(--areia-clara);
+}
+
+.veredito__cultura {
+  font-weight: 700;
+}
+
+.veredito__cultura small {
+  font-weight: 400;
+  color: var(--texto-suave);
+}
+
+.veredito__texto strong {
+  display: block;
+  font-size: 1.6rem;
+  line-height: 1.15;
+}
+
+.veredito__texto p {
+  margin-top: 2px;
+}
+
+.veredito__numeros {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin: 6px 0 0;
+}
+
+.veredito__numeros div {
+  background: rgb(255 255 255 / 55%);
+  border-radius: 12px;
+  padding: 8px 12px;
+}
+
+.veredito__numeros dt {
+  font-size: 0.85rem;
+  color: var(--texto-suave);
+}
+
+.veredito__numeros dd {
+  margin: 0;
+  font-size: 1.35rem;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+
+.veredito__saldo--negativo dd {
+  color: var(--terracota-texto);
+}
+
+.detalhe__subtitulo {
+  font-size: 1.05rem;
+  margin: 18px 0 8px;
+}
+
+.clima-simples {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  margin: 0;
+}
+
+.clima-simples div {
+  background: var(--fundo);
+  border-radius: 14px;
+  padding: 10px 8px;
+  text-align: center;
+}
+
+.clima-simples__icone {
+  font-size: 1.7rem;
+  line-height: 1;
+}
+
+.clima-simples dt {
+  font-size: 0.82rem;
+  color: var(--texto-suave);
+}
+
+.clima-simples dd {
+  margin: 0;
+  font-size: 1.2rem;
+  font-weight: 800;
+}
+
+.epocas h3 {
+  font-size: 1.05rem;
+}
+
+.epoca {
+  font-size: 0.9rem;
+}
+
+.epocas__frase {
+  font-size: 1rem;
+}
+
+/* ---------- resumo dos 15 anos, agora no topo ---------- */
+.app--mapa .resumo {
+  border-top: 0;
+  padding-top: 0;
+}
+
+.app--mapa .resumo h2 {
+  font-size: 1.15rem;
+}
+
+.app--mapa .resumo__linha {
+  grid-template-columns: 1fr;
+  gap: 4px;
+  padding: 8px 0;
+}
+
+.app--mapa .resumo__nome {
+  flex-direction: row;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.app--mapa .resumo__nome strong {
+  font-size: 1.15rem;
+}
+
+.app--mapa .barra {
+  height: 22px;
+}
+
+.app--mapa .resumo__texto {
+  font-size: 1rem;
+}
+
+.app--mapa .resumo__texto b {
+  font-size: 1.25rem;
+}
+
+.app--mapa .nota-rodape {
+  font-size: 0.9rem;
+}
+
+@media (max-width: 1100px) {
+  .app--mapa .painel__corpo,
+  .app--painel-grande .painel__corpo {
+    zoom: 1.05;
+  }
+
+  .painel__aumentar {
+    display: none;
+  }
+}

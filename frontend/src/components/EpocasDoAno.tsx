@@ -13,7 +13,7 @@ export function EpocasDoAno({ clima }: { clima: ClimaAnual }) {
 
   return (
     <section className="epocas">
-      <h3>Chuva por época do ano{clima.projetado ? ' (como costuma se repartir)' : ''}</h3>
+      <h3>Quando choveu{clima.projetado ? ' (como costuma ser)' : ''}</h3>
       <div className="epocas__barras">
         {trimestres.map((t) => (
           <div key={t.nome} className={t === seco ? 'epoca epoca--seca' : 'epoca'}>
@@ -27,8 +27,8 @@ export function EpocasDoAno({ clima }: { clima: ClimaAnual }) {
         ))}
       </div>
       <p className="epocas__frase">
-        {parte(chuvoso.chuva)}% da chuva do ano caiu em <b>{chuvoso.nome}</b>. A época mais seca foi{' '}
-        <b>{seco.nome}</b>, com {Math.round(seco.chuva)} mm: é quando a planta e a terra descoberta mais sofrem.
+        Mais chuva: <b>{chuvoso.nome}</b> ({parte(chuvoso.chuva)}% do ano). Mais seco: <b>{seco.nome}</b>, quando a
+        planta mais sofre.
       </p>
     </section>
   )

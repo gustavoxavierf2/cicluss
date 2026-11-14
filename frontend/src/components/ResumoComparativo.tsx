@@ -23,7 +23,7 @@ function Linha({ s, papel }: { s: Simulacao; papel: string }) {
       </div>
       <Barra resumo={r} />
       <span className="resumo__texto">
-        <b>{r.anosBons}</b> de {total} anos bons
+        <b>{r.anosBons}</b> de {total} anos bons{r.anosRuins > 0 && <>, <b className="cor-ruim">{r.anosRuins}</b> {r.anosRuins === 1 ? 'ruim' : 'ruins'}</>}
       </span>
     </div>
   )
@@ -34,8 +34,8 @@ export function ResumoComparativo({ plantada, alternativa }: { plantada: Simulac
   return (
     <section className="resumo">
       <h2>Nos últimos {total} anos, neste terreno</h2>
-      <Linha s={plantada} papel="o que você plantou" />
-      {alternativa && <Linha s={alternativa} papel="e se?" />}
+      <Linha s={plantada} papel="o que você planta" />
+      {alternativa && <Linha s={alternativa} papel="para comparar" />}
     </section>
   )
 }

@@ -58,6 +58,7 @@ export default function App() {
   const [fonteClima, setFonteClima] = useState<string | null>(null)
   const [soloEstimado, setSoloEstimado] = useState<SoloEstimado | null>(null)
   const [painelAberto, setPainelAberto] = useState(true)
+  const [painelGrande, setPainelGrande] = useState(false)
   const hectares = lerHectares(respostas.hectares)
   const pedido = useRef(0)
 
@@ -148,7 +149,7 @@ export default function App() {
     : []
 
   return (
-    <div className={`app app--mapa ${temPainel && painelAberto ? 'app--painel' : ''}`}>
+    <div className={`app app--mapa ${temPainel && painelAberto ? 'app--painel' : ''} ${painelGrande ? 'app--painel-grande' : ''}`}>
       <div className="palco">
         <MapaTerreno ponto={ponto} aoEscolher={setPonto} />
       </div>
@@ -239,7 +240,7 @@ export default function App() {
         </p>
       )}
 
-      {resultado && aba === 'anos' && (
+      {resultado && aba === 'anos' && !(painelGrande && painelAberto) && (
         <div className="tempo">
           <BarraAnos
             primeiro={anos[0].ano}
@@ -261,9 +262,21 @@ export default function App() {
         <section className="painel" aria-label="Resultado">
           <header className="painel__cabecalho">
             <h2>{resultado ? VISOES.find((v) => v.id === aba)?.nome : 'Como usar'}</h2>
-            <button type="button" className="fechar" onClick={() => setPainelAberto(false)} aria-label="Fechar painel">
-              ×
-            </button>
+            <div className="painel__acoes">
+              <button type="button" className="painel__aumentar" aria-pressed={painelGrande}
+                onClick={() => setPainelGrande(!painelGrande)}>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2"
+                  strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                  {painelGrande
+                    ? <path d="M9 4v5H4M15 4v5h5M9 20v-5H4M15 20v-5h5" />
+                    : <path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5" />}
+                </svg>
+                {painelGrande ? 'Diminuir' : 'Aumentar'}
+              </button>
+              <button type="button" className="fechar" onClick={() => setPainelAberto(false)} aria-label="Fechar painel">
+                ×
+              </button>
+            </div>
           </header>
 
           <div className={`painel__corpo ${carregando && resultado ? 'painel__corpo--carregando' : ''}`}>
@@ -275,25 +288,51 @@ export default function App() {
             )}
 
             {!resultado && !erro && (
-              <div className="vazio">
-                <div className="vazio__texto">
-                  <h2>Seu terreno, ano a ano</h2>
-                  <ol>
-                    <li>Escolha o que você planta hoje e o que quer comparar, no menu ao lado.</li>
-                    <li>Clique no mapa onde fica o terreno.</li>
-                    <li>Aperte <b>Ver resultado</b>.</li>
-                  </ol>
-                  <p>
-                    Você vai ver, ano a ano, como cada cultura teria ido com o clima que realmente aconteceu ali, e
-                    comparar rotações de culturas pelo clima e pela saúde da terra.
-                  </p>
-                </div>
-                <img className="vazio__tatu" src={tatuPlantando} alt="" width="150" height="147" />
+              <div className="guia">
+                <img className="guia__tatu" src={tatuPlantando} alt="" width="150" height="147" />
+                <h2>Comece em 3 passos</h2>
+                <ol className="passos">
+                  <li className={respostas.culturaPlantadaId ? 'passo passo--feito' : 'passo'}>
+                    <span className="passo__numero" aria-hidden="true">1</span>
+                    <div>
+                      <b>Escolha o que você planta</b>
+                      <span>No menu verde, do lado esquerdo.</span>
+                    </div>
+                  </li>
+                  <li className={ponto ? 'passo passo--feito' : 'passo'}>
+                    <span className="passo__numero" aria-hidden="true">2</span>
+                    <div>
+                      <b>Clique no mapa</b>
+                      <span>Bem em cima de onde fica a sua terra.</span>
+                    </div>
+                  </li>
+                  <li className="passo">
+                    <span className="passo__numero" aria-hidden="true">3</span>
+                    <div>
+                      <b>Aperte “Ver resultado”</b>
+                      <span>É o botão laranja do menu.</span>
+                    </div>
+                  </li>
+                </ol>
+                <p className="guia__fim">
+                  Aí você vê se cada ano foi <b className="cor-bom">bom</b>, de <b className="cor-atencao">atenção</b>{' '}
+                  ou <b className="cor-ruim">ruim</b> para a sua planta.
+                </p>
               </div>
             )}
 
             {resultado && aba === 'anos' && (
               <>
+                <ResumoComparativo plantada={resultado.plantada} alternativa={resultado.alternativa} />
+                {painelGrande && (
+                  <BarraAnos
+                    primeiro={anos[0].ano}
+                    ultimo={anos[anos.length - 1].ano}
+                    anoAtual={resultado.plantada.anoAtual}
+                    ano={ano}
+                    aoMudar={setAno}
+                  />
+                )}
                 <DetalheAno plantada={resultado.plantada} alternativa={resultado.alternativa} ano={ano} />
                 {ponto && (
                   <CenarioClima
@@ -305,7 +344,6 @@ export default function App() {
                     ano={ano}
                   />
                 )}
-                <ResumoComparativo plantada={resultado.plantada} alternativa={resultado.alternativa} />
               </>
             )}
 
