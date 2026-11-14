@@ -27,6 +27,14 @@ interface Resultado {
 
 type Aba = 'anos' | 'rotacao' | 'plantar' | 'plano'
 
+/** As quatro visões do resultado, escolhidas no menu da esquerda. */
+const VISOES: { id: Aba; nome: string; icone: string }[] = [
+  { id: 'anos', nome: 'Ano a ano', icone: 'M7 3v3M17 3v3M4 9h16M5 6h14a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1z' },
+  { id: 'rotacao', nome: 'Rotação de culturas', icone: 'M20 12a8 8 0 1 1-2.34-5.66M20 4v4h-4' },
+  { id: 'plantar', nome: 'O que plantar', icone: 'M12 21v-9M12 12c0-4 3-6 7-6 0 4-3 6-7 6zM12 15c0-3-2-5-6-5 0 3 2 5 6 5z' },
+  { id: 'plano', nome: 'Planejamento', icone: 'M9 6h11M9 12h11M9 18h11M4 6h.01M4 12h.01M4 18h.01' },
+]
+
 /** Área digitada pelo agricultor; null quando está vazia ou inválida. */
 function lerHectares(texto: string): number | null {
   const n = Number(texto.replace(',', '.'))
@@ -49,6 +57,7 @@ export default function App() {
   const [culturaPlanoId, setCulturaPlanoId] = useState('')
   const [fonteClima, setFonteClima] = useState<string | null>(null)
   const [soloEstimado, setSoloEstimado] = useState<SoloEstimado | null>(null)
+  const [painelAberto, setPainelAberto] = useState(true)
   const hectares = lerHectares(respostas.hectares)
   const pedido = useRef(0)
 
@@ -118,14 +127,18 @@ export default function App() {
     if (culturaId === respostas.culturaPlantadaId) return
     setRespostas({ ...respostas, culturaTesteId: culturaId })
     setAba('anos')
+    setPainelAberto(true)
   }
 
   function planejarCom(culturaId: string) {
     setCulturaPlanoId(culturaId)
     setAba('plano')
+    setPainelAberto(true)
   }
 
   const anos = resultado?.plantada.anos ?? []
+  // O painel da direita aparece sempre: com o guia no começo, depois com o resultado ou o erro.
+  const temPainel = true
   const sugestoes = resultado
     ? [
         `O que aconteceu em ${ano}?`,
@@ -135,39 +148,35 @@ export default function App() {
     : []
 
   return (
-    <div className="app">
-      <header className="topo">
-        <div className="topo__marca">
+    <div className={`app app--mapa ${temPainel && painelAberto ? 'app--painel' : ''}`}>
+      <div className="palco">
+        <MapaTerreno ponto={ponto} aoEscolher={setPonto} />
+      </div>
+
+      <aside className="menu" aria-label="Seu terreno">
+        <div className="menu__marca">
           <h1 className="topo__logo">
             <img src={logo} alt="Ciclus" width="120" height="36" />
           </h1>
-          <p>Qual rotação de culturas protege a sua terra e a sua renda? Simulador com dados de satélite da NASA</p>
+          <p>Qual rotação de culturas protege a sua terra e a sua renda?</p>
         </div>
-        <span className="topo__demo">
-          {fonteClima === 'nasa'
-            ? 'clima: NASA POWER · culturas e preços de exemplo'
-            : fonteClima === 'http'
-              ? 'culturas e preços de exemplo'
-              : 'dados de demonstração'}
-        </span>
-      </header>
 
-      <Seletores
-        culturas={culturas}
-        respostas={respostas}
-        aoMudar={setRespostas}
-        podeCalcular={!!ponto && culturas.length > 0}
-        carregando={carregando}
-        aoCalcular={() => setAtivo(true)}
-      />
+        <Seletores
+          culturas={culturas}
+          respostas={respostas}
+          aoMudar={setRespostas}
+          podeCalcular={!!ponto && culturas.length > 0}
+          carregando={carregando}
+          aoCalcular={() => {
+            setAtivo(true)
+            setPainelAberto(true)
+          }}
+        />
 
-      <main className="conteudo">
-        <section className="mapa">
-          <h2 className="secao-titulo">Onde fica o seu terreno?</h2>
-          <MapaTerreno ponto={ponto} aoEscolher={setPonto} />
+        <div className="menu__terreno">
           <p className="mapa__legenda">
             {ponto
-              ? `Terreno marcado: ${ponto.latitude.toFixed(4)}, ${ponto.longitude.toFixed(4)}. Clique em outro lugar para mudar.`
+              ? `Terreno marcado: ${ponto.latitude.toFixed(4)}, ${ponto.longitude.toFixed(4)}. Clique em outro lugar do mapa para mudar.`
               : 'Clique no mapa onde fica o seu terreno.'}
           </p>
           {soloEstimado && (
@@ -183,27 +192,79 @@ export default function App() {
               <span className="mapa__fonte">Fonte: {soloEstimado.fonte}. É uma estimativa, não análise de solo.</span>
             </p>
           )}
-        </section>
+        </div>
 
-        <section className="painel">
-          <nav className="abas" role="tablist">
-            <button type="button" role="tab" aria-selected={aba === 'anos'} className={aba === 'anos' ? 'aba aba--ativa' : 'aba'}
-              onClick={() => setAba('anos')}>
-              Ano a ano
+        <nav className="visoes" aria-label="O que ver">
+          <h2 className="menu__titulo">O que ver</h2>
+          {VISOES.map((v) => (
+            <button key={v.id} type="button" disabled={!resultado}
+              aria-current={resultado && aba === v.id ? 'page' : undefined}
+              className={resultado && aba === v.id ? 'visao visao--ativa' : 'visao'}
+              onClick={() => {
+                setAba(v.id)
+                setPainelAberto(true)
+              }}>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"
+                strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <path d={v.icone} />
+              </svg>
+              {v.nome}
             </button>
-            <button type="button" role="tab" aria-selected={aba === 'rotacao'} className={aba === 'rotacao' ? 'aba aba--ativa' : 'aba'}
-              onClick={() => setAba('rotacao')}>
-              Rotação
+          ))}
+        </nav>
+
+        <div className="menu__rodape">
+          <div className="legenda" aria-label="Legenda das cores">
+            <span className="legenda__item legenda__item--bom">Bom</span>
+            <span className="legenda__item legenda__item--atencao">Atenção</span>
+            <span className="legenda__item legenda__item--ruim">Ruim</span>
+          </div>
+          <span className="topo__demo">
+            {fonteClima === 'nasa'
+              ? 'clima: NASA POWER · culturas e preços de exemplo'
+              : fonteClima === 'http'
+                ? 'culturas e preços de exemplo'
+                : 'dados de demonstração'}
+          </span>
+        </div>
+      </aside>
+
+      {!resultado && !erro && (
+        <p className="dica" role="status">
+          {!ponto
+            ? 'Clique no mapa onde fica o seu terreno'
+            : carregando
+              ? 'Buscando o clima da NASA para este terreno…'
+              : 'Agora aperte Ver resultado'}
+        </p>
+      )}
+
+      {resultado && aba === 'anos' && (
+        <div className="tempo">
+          <BarraAnos
+            primeiro={anos[0].ano}
+            ultimo={anos[anos.length - 1].ano}
+            anoAtual={resultado.plantada.anoAtual}
+            ano={ano}
+            aoMudar={setAno}
+          />
+        </div>
+      )}
+
+      {temPainel && !painelAberto && (
+        <button type="button" className="painel-abrir" onClick={() => setPainelAberto(true)}>
+          Abrir resultado
+        </button>
+      )}
+
+      {temPainel && painelAberto && (
+        <section className="painel" aria-label="Resultado">
+          <header className="painel__cabecalho">
+            <h2>{resultado ? VISOES.find((v) => v.id === aba)?.nome : 'Como usar'}</h2>
+            <button type="button" className="fechar" onClick={() => setPainelAberto(false)} aria-label="Fechar painel">
+              ×
             </button>
-            <button type="button" role="tab" aria-selected={aba === 'plantar'} className={aba === 'plantar' ? 'aba aba--ativa' : 'aba'}
-              onClick={() => setAba('plantar')}>
-              O que plantar
-            </button>
-            <button type="button" role="tab" aria-selected={aba === 'plano'} className={aba === 'plano' ? 'aba aba--ativa' : 'aba'}
-              onClick={() => setAba('plano')}>
-              Planejamento
-            </button>
-          </nav>
+          </header>
 
           <div className={`painel__corpo ${carregando && resultado ? 'painel__corpo--carregando' : ''}`}>
             {erro && (
@@ -218,7 +279,7 @@ export default function App() {
                 <div className="vazio__texto">
                   <h2>Seu terreno, ano a ano</h2>
                   <ol>
-                    <li>Escolha o que você planta hoje e o que quer comparar, lá em cima.</li>
+                    <li>Escolha o que você planta hoje e o que quer comparar, no menu ao lado.</li>
                     <li>Clique no mapa onde fica o terreno.</li>
                     <li>Aperte <b>Ver resultado</b>.</li>
                   </ol>
@@ -233,13 +294,6 @@ export default function App() {
 
             {resultado && aba === 'anos' && (
               <>
-                <BarraAnos
-                  primeiro={anos[0].ano}
-                  ultimo={anos[anos.length - 1].ano}
-                  anoAtual={resultado.plantada.anoAtual}
-                  ano={ano}
-                  aoMudar={setAno}
-                />
                 <DetalheAno plantada={resultado.plantada} alternativa={resultado.alternativa} ano={ano} />
                 {ponto && (
                   <CenarioClima
@@ -282,7 +336,7 @@ export default function App() {
             )}
           </div>
         </section>
-      </main>
+      )}
 
       {resultado && (
         <ChatAgente

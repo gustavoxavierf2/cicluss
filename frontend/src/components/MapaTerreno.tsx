@@ -1,4 +1,4 @@
-import { CircleMarker, LayersControl, MapContainer, TileLayer, useMapEvents } from 'react-leaflet'
+import { CircleMarker, LayersControl, MapContainer, TileLayer, ZoomControl, useMapEvents } from 'react-leaflet'
 import type { Ponto } from '../tipos'
 
 // Vitória da Conquista (BA): base de testes do projeto.
@@ -23,7 +23,8 @@ function CliqueNoMapa({ aoEscolher }: { aoEscolher: (p: Ponto) => void }) {
 
 export function MapaTerreno({ ponto, aoEscolher }: Props) {
   return (
-    <MapContainer center={CENTRO} zoom={11} className="mapa__leaflet">
+    <MapContainer center={CENTRO} zoom={11} className="mapa__leaflet" zoomControl={false}>
+      <ZoomControl position="topright" />
       <LayersControl position="topright">
         <LayersControl.BaseLayer checked name="Mapa">
           <TileLayer

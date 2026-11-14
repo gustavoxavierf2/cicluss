@@ -25,7 +25,7 @@ export function Seletores({ culturas, respostas, aoMudar, podeCalcular, carregan
   return (
     <div className="seletores">
       <label className="seletor">
-        <span className="seletor__titulo">1. O que você plantou?</span>
+        <span className="seletor__titulo">1. O que você planta?</span>
         <select
           value={respostas.culturaPlantadaId}
           onChange={(e) => {
@@ -44,7 +44,7 @@ export function Seletores({ culturas, respostas, aoMudar, podeCalcular, carregan
       </label>
 
       <label className="seletor">
-        <span className="seletor__titulo">2. E se tivesse plantado…</span>
+        <span className="seletor__titulo">2. Comparar com</span>
         <select value={respostas.culturaTesteId} onChange={(e) => aoMudar({ ...respostas, culturaTesteId: e.target.value })}>
           <option value="">Não comparar</option>
           {culturas
@@ -65,7 +65,7 @@ export function Seletores({ culturas, respostas, aoMudar, podeCalcular, carregan
       </label>
 
       <label className="seletor seletor--curto">
-        <span className="seletor__titulo">4. Quantos hectares?</span>
+        <span className="seletor__titulo">4. Hectares</span>
         <input
           type="number"
           inputMode="decimal"
