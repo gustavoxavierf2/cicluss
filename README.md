@@ -4,7 +4,7 @@
 
 Projeto da equipe para o desafio *Field Shift: Adapting Farms with NASA Data* (NASA Space Apps 2026).
 
-> ⚠️ **Protótipo com dados de demonstração.** O clima ainda é gerado por `MockClimaProvider` e a tabela de culturas tem valores de exemplo. Veja [docs/contrato-dados.md](docs/contrato-dados.md) para ligar os dados reais da NASA.
+> ⚠️ **Protótipo.** O clima vem da **NASA POWER** (dado real). A tabela de culturas e os preços ainda são **valores de exemplo**, e a previsão dos anos futuros é só a tendência do histórico. Veja [De onde vem o clima](#de-onde-vem-o-clima).
 
 ## Estrutura
 
@@ -92,6 +92,33 @@ curl -X POST localhost:8080/api/simulacoes -H 'Content-Type: application/json' \
   -d '{"latitude":-14.866,"longitude":-40.839,"solo":"MISTO","culturaId":"milho"}'
 ```
 
+## De onde vem o clima
+
+`fieldshift.clima.fonte` em `backend/src/main/resources/application.properties`:
+
+| Valor | O que usa |
+|---|---|
+| `nasa` (padrão) | [NASA POWER](https://power.larc.nasa.gov), API mensal por ponto, comunidade AG. Precisa de internet; não precisa de chave |
+| `mock` | Dados falsos, para desenvolver sem internet |
+| `http` | Serviço próprio no formato de [docs/contrato-dados.md](docs/contrato-dados.md) (`fieldshift.clima.url`) |
+
+Com `nasa` (`core/clima/NasaPowerClimaProvider`):
+
+| Campo do site | Parâmetro da NASA POWER |
+|---|---|
+| Temperatura média | `T2M`, média do ano |
+| Temperatura máxima / mínima | média das 12 máximas / mínimas mensais de `T2M_MAX` / `T2M_MIN` |
+| Chuva do ano | `PRECTOTCORR_SUM`, soma do ano em mm |
+| Umidade da terra | `GWETROOT`, umidade da zona de raiz (0 a 1) |
+| Água que a planta perde | `EVLAND` (mm/dia) × dias do ano |
+
+Pontos de atenção:
+
+- **Futuro é tendência, não previsão de modelo.** A NASA POWER só tem o passado. Os 15 anos para frente são a reta de tendência dos últimos 30 anos de cada variável. Isso mostra para onde o clima está indo, mas **não prevê seca de um ano específico**: o futuro sai liso, mesmo onde o passado teve anos ruins.
+- **Umidade da terra:** o `GWETROOT` fica perto de 0,6 na região, então o limite de "solo seco" (abaixo de 0,25), pensado para os dados falsos, quase nunca dispara. Precisa ser calibrado.
+- **Evapotranspiração:** `EVLAND` é a água que de fato evaporou (real), não a demanda potencial. A regra "chuva menor que 60% da evapotranspiração" também dispara pouco com ela.
+- O resultado de cada ponto fica em memória (a grade da NASA é de 0,5°), então só a primeira consulta de um terreno espera a NASA.
+
 ## Safra, valores e planejamento
 
 - **Hectares e safra:** com a área informada (`hectares`), cada ano da simulação traz safra, venda, custo e sobra estimados. A conta é simples: colheita de um ano bom × nota do ano (0 a 100) × hectares. Serve para dar ideia de grandeza; **não é** produtividade calibrada (tipo DSSAT).
@@ -107,14 +134,16 @@ curl -X POST localhost:8080/api/simulacoes -H 'Content-Type: application/json' \
   - `servico/RecomendacaoService` — ranking das culturas.
   - `servico/SafraCalculadora` — estimativa de safra e dinheiro por hectare.
   - `servico/PlanejamentoService` — plano de plantio com rotação.
-  - `clima/ClimaProvider` — de onde vem o clima. `MockClimaProvider` (falso) ou `HttpClimaProvider` (serviço do pessoal dos dados).
+  - `clima/ClimaProvider` — de onde vem o clima. `NasaPowerClimaProvider` (NASA POWER), `MockClimaProvider` (falso) ou `HttpClimaProvider` (serviço próprio).
   - `agente/AgenteAnthropic` — agente com IA (API da Anthropic). `agente/AgenteDemonstracao` — responde por regras fixas. `agente/AgenteComReserva` — usa a IA e cai na demonstração se não houver chave, der erro ou demorar.
 - `api/` — controllers REST.
 - `config/` — liga as peças. Trocar a fonte de clima: `fieldshift.clima.fonte` em `application.properties`.
 
 ## Próximos passos
 
-- [ ] Dados reais da NASA (ver contrato).
+- [x] Clima real da NASA POWER.
+- [ ] Previsão dos anos futuros com modelo climático (hoje é a tendência do histórico).
+- [ ] Calibrar os limites de solo seco e de evapotranspiração para os dados da NASA.
 - [ ] Tabela de culturas com valores do EcoCrop (FAO) / ZARC (Embrapa).
 - [ ] Produtividade, preço e custo reais (CONAB/IBGE) no lugar dos valores de exemplo.
 - [x] Agente com LLM (chave da API só no backend).

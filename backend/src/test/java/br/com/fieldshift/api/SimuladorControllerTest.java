@@ -12,13 +12,21 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-// Sem chave: os testes nunca chamam a API de verdade, mesmo que ANTHROPIC_API_KEY exista na máquina.
-@SpringBootTest(properties = "fieldshift.agente.chave=")
+// Sem chave e com clima falso: os testes nunca chamam a Anthropic nem a NASA de verdade.
+@SpringBootTest(properties = {"fieldshift.agente.chave=", "fieldshift.clima.fonte=mock"})
 @AutoConfigureMockMvc
 class SimuladorControllerTest {
 
     @Autowired
     MockMvc mvc;
+
+    @Test
+    void infoDizAFonteDoClima() throws Exception {
+        mvc.perform(get("/api/info"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.fonteClima").value("mock"))
+                .andExpect(jsonPath("$.climaDeDemonstracao").value(true));
+    }
 
     @Test
     void listaCulturas() throws Exception {

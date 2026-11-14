@@ -45,10 +45,12 @@ export default function App() {
   const [pensando, setPensando] = useState(false)
   const [demonstracao, setDemonstracao] = useState(true)
   const [culturaPlanoId, setCulturaPlanoId] = useState('')
+  const [fonteClima, setFonteClima] = useState<string | null>(null)
   const hectares = lerHectares(respostas.hectares)
   const pedido = useRef(0)
 
   useEffect(() => {
+    api.info().then((i) => setFonteClima(i.fonteClima)).catch(() => setFonteClima(null))
     api.culturas()
       .then((lista) => {
         setCulturas(lista)
@@ -125,7 +127,13 @@ export default function App() {
           </h1>
           <p>E se você tivesse plantado outra coisa? Simulador de culturas com dados de satélite da NASA</p>
         </div>
-        <span className="topo__demo">dados de demonstração</span>
+        <span className="topo__demo">
+          {fonteClima === 'nasa'
+            ? 'clima: NASA POWER · culturas e preços de exemplo'
+            : fonteClima === 'http'
+              ? 'culturas e preços de exemplo'
+              : 'dados de demonstração'}
+        </span>
       </header>
 
       <Seletores

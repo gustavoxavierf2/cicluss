@@ -60,4 +60,8 @@ public final class Requisicoes {
 
     public record Resposta(String resposta, boolean demonstracao) {
     }
+
+    /** De onde vêm os dados, para o site mostrar o aviso certo. fonteClima: nasa, http ou mock. */
+    public record Info(String fonteClima, boolean climaDeDemonstracao) {
+    }
 }

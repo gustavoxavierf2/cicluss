@@ -22,6 +22,8 @@ async function chamar<T>(caminho: string, corpo?: unknown): Promise<T> {
 }
 
 export const api = {
+  info: () => chamar<{ fonteClima: string; climaDeDemonstracao: boolean }>('/api/info'),
+
   culturas: () => chamar<Cultura[]>('/api/culturas'),
 
   simular: (ponto: Ponto, solo: TipoSolo, culturaId: string, hectares: number | null) =>

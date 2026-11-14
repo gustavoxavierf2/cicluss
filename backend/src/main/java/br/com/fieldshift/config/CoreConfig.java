@@ -4,6 +4,7 @@ import br.com.fieldshift.core.agente.AgenteComReserva;
 import br.com.fieldshift.core.clima.ClimaProvider;
 import br.com.fieldshift.core.clima.HttpClimaProvider;
 import br.com.fieldshift.core.clima.MockClimaProvider;
+import br.com.fieldshift.core.clima.NasaPowerClimaProvider;
 import br.com.fieldshift.core.servico.AptidaoCalculadora;
 import br.com.fieldshift.core.servico.CulturaRepository;
 import br.com.fieldshift.core.servico.PlanejamentoService;
@@ -30,7 +31,8 @@ public class CoreConfig {
     private static final Logger LOG = LoggerFactory.getLogger(CoreConfig.class);
 
     /**
-     * fieldshift.clima.fonte=mock  → dados falsos (padrão)
+     * fieldshift.clima.fonte=nasa  → NASA POWER, direto da API pública da NASA
+     * fieldshift.clima.fonte=mock  → dados falsos, para desenvolver sem internet
      * fieldshift.clima.fonte=http  → serviço do pessoal dos dados em fieldshift.clima.url
      */
     @Bean
@@ -39,6 +41,7 @@ public class CoreConfig {
                                        ObjectMapper mapper) {
         return switch (fonte) {
             case "mock" -> new MockClimaProvider();
+            case "nasa" -> new NasaPowerClimaProvider(mapper);
             case "http" -> {
                 if (url.isBlank()) {
                     throw new IllegalStateException("fieldshift.clima.fonte=http exige fieldshift.clima.url");

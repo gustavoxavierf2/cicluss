@@ -47,6 +47,11 @@ AgroClimate, SIMAGRI e DSSAT fazem algo parecido para técnicos e pesquisadores.
 mapa, poucas perguntas e resposta em linguagem simples, com foco no pequeno produtor brasileiro.
 Visual inspirado no painel do AgroClimate.
 
+## Fonte do clima (decidido em 14/11/2026)
+O clima vem da NASA POWER, direto da API pública (temperatura, chuva, umidade da zona de raiz e
+evapotranspiração). Como a NASA POWER não tem previsão, os anos futuros são a tendência dos últimos
+30 anos. Detalhes no README, seção "De onde vem o clima".
+
 ## Divisão
 Outras pessoas da equipe cuidam dos dados reais da NASA e vão entregar no formato de
 docs/contrato-dados.md. Até lá o site usa dados de demonstração.

@@ -13,6 +13,7 @@ import br.com.fieldshift.core.servico.PlanejamentoService;
 import br.com.fieldshift.core.servico.RecomendacaoService;
 import br.com.fieldshift.core.servico.SimuladorService;
 import jakarta.validation.Valid;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -30,15 +31,24 @@ public class SimuladorController {
     private final RecomendacaoService recomendacao;
     private final PlanejamentoService planejamento;
     private final AgenteComReserva agente;
+    private final String fonteClima;
 
     public SimuladorController(CulturaRepository culturas, SimuladorService simulador,
                                RecomendacaoService recomendacao, PlanejamentoService planejamento,
-                               AgenteComReserva agente) {
+                               AgenteComReserva agente,
+                               @Value("${fieldshift.clima.fonte:mock}") String fonteClima) {
         this.culturas = culturas;
         this.simulador = simulador;
         this.recomendacao = recomendacao;
         this.planejamento = planejamento;
         this.agente = agente;
+        this.fonteClima = fonteClima;
+    }
+
+    /** De onde vem o clima, para o site avisar quando os dados são de demonstração. */
+    @GetMapping("/info")
+    public Requisicoes.Info info() {
+        return new Requisicoes.Info(fonteClima, "mock".equals(fonteClima));
     }
 
     /** Lista de culturas para os selects do front. */
