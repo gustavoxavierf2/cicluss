@@ -51,6 +51,50 @@ export interface ClimaAnual {
   precipitacao: number
   umidadeSolo: number
   evapotranspiracao: number
+  /** Chuva e temperatura dos 4 trimestres; null quando a fonte só tem o valor do ano. */
+  trimestres: Trimestre[] | null
+}
+
+export interface Trimestre {
+  nome: string
+  chuva: number
+  temperaturaMedia: number
+}
+
+export interface IndicadorSolo {
+  nome: string
+  nivel: Nivel
+  texto: string
+}
+
+export interface Estrategia {
+  id: string
+  nome: string
+  descricao: string
+  atual: boolean
+  sequencia: Cultura[]
+  anos: { ano: number; cultura: string; nota: number; nivel: Nivel; risco: Risco }[]
+  resumo: Resumo
+  saldoTotal: number | null
+  solo: IndicadorSolo[]
+  pontosSolo: number
+  mesesDescoberto: number
+}
+
+export interface ComparacaoEstrategias {
+  estrategias: Estrategia[]
+  recomendadaId: string
+  porque: string
+  epocaSeca: string | null
+  hectares: number
+}
+
+export interface SoloEstimado {
+  tipo: TipoSolo
+  argila: number
+  areia: number
+  silte: number
+  fonte: string
 }
 
 export interface ResultadoAno {

@@ -4,20 +4,25 @@ import br.com.fieldshift.core.agente.AgenteComReserva;
 import br.com.fieldshift.core.agente.ContextoAgente;
 import br.com.fieldshift.core.agente.RespostaAgente;
 import br.com.fieldshift.core.modelo.Cenario;
+import br.com.fieldshift.core.modelo.ComparacaoEstrategias;
 import br.com.fieldshift.core.modelo.Cultura;
 import br.com.fieldshift.core.modelo.ItemRanking;
 import br.com.fieldshift.core.modelo.Planejamento;
 import br.com.fieldshift.core.modelo.Simulacao;
+import br.com.fieldshift.core.modelo.SoloEstimado;
 import br.com.fieldshift.core.servico.CulturaRepository;
+import br.com.fieldshift.core.servico.EstrategiaService;
 import br.com.fieldshift.core.servico.PlanejamentoService;
 import br.com.fieldshift.core.servico.RecomendacaoService;
 import br.com.fieldshift.core.servico.SimuladorService;
+import br.com.fieldshift.core.solo.SoilGridsSoloProvider;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
@@ -30,17 +35,22 @@ public class SimuladorController {
     private final SimuladorService simulador;
     private final RecomendacaoService recomendacao;
     private final PlanejamentoService planejamento;
+    private final EstrategiaService estrategias;
+    private final SoilGridsSoloProvider solo;
     private final AgenteComReserva agente;
     private final String fonteClima;
 
     public SimuladorController(CulturaRepository culturas, SimuladorService simulador,
                                RecomendacaoService recomendacao, PlanejamentoService planejamento,
+                               EstrategiaService estrategias, SoilGridsSoloProvider solo,
                                AgenteComReserva agente,
                                @Value("${fieldshift.clima.fonte:mock}") String fonteClima) {
         this.culturas = culturas;
         this.simulador = simulador;
         this.recomendacao = recomendacao;
         this.planejamento = planejamento;
+        this.estrategias = estrategias;
+        this.solo = solo;
         this.agente = agente;
         this.fonteClima = fonteClima;
     }
@@ -74,6 +84,19 @@ public class SimuladorController {
     public Cenario cenario(@Valid @RequestBody Requisicoes.Cenario req) {
         return simulador.cenario(req.latitude(), req.longitude(), req.solo(), req.culturaId(), req.hectares(),
                 req.anoBase(), req.temperaturaMedia(), req.precipitacao(), req.umidadeSolo());
+    }
+
+    /** Compara estratégias de rotação (inclui o que o agricultor faz hoje) pelo clima e pela saúde do solo. */
+    @PostMapping("/estrategias")
+    public ComparacaoEstrategias estrategias(@Valid @RequestBody Requisicoes.Estrategias req) {
+        return estrategias.comparar(req.latitude(), req.longitude(), req.solo(), req.hectares(),
+                req.culturaPlantadaId(), req.culturaTesteId());
+    }
+
+    /** Tipo de terra estimado para o ponto clicado (SoilGrids), como sugestão para quem não sabe. */
+    @GetMapping("/solo")
+    public SoloEstimado solo(@RequestParam double latitude, @RequestParam double longitude) {
+        return solo.estimar(latitude, longitude);
     }
 
     /** Plano de plantio com rotação para os próximos 1, 3 ou 5 anos. */

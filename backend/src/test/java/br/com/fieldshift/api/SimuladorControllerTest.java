@@ -88,6 +88,18 @@ class SimuladorControllerTest {
     }
 
     @Test
+    void comparaEstrategiasDeRotacao() throws Exception {
+        mvc.perform(post("/api/estrategias").contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"latitude\":-14.866,\"longitude\":-40.839,\"solo\":\"MISTO\",\"hectares\":2,"
+                                + "\"culturaPlantadaId\":\"milho\",\"culturaTesteId\":\"sorgo\"}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.estrategias.length()").value(4))
+                .andExpect(jsonPath("$.estrategias[0].atual").value(true))
+                .andExpect(jsonPath("$.estrategias[0].solo.length()").value(4))
+                .andExpect(jsonPath("$.recomendadaId").isNotEmpty());
+    }
+
+    @Test
     void planejamentoDe2AnosDa400() throws Exception {
         mvc.perform(post("/api/planejamentos").contentType(MediaType.APPLICATION_JSON)
                         .content("{\"latitude\":-14.866,\"longitude\":-40.839,\"culturaPrincipalId\":\"milho\",\"anos\":2}"))

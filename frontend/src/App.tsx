@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { api } from './api'
-import type { Cultura, ItemRanking, Ponto, Simulacao } from './tipos'
+import type { Cultura, ItemRanking, Ponto, Simulacao, SoloEstimado } from './tipos'
+import { NOME_SOLO } from './tipos'
 import { MapaTerreno } from './components/MapaTerreno'
 import { Seletores } from './components/Seletores'
 import type { Respostas } from './components/Seletores'
@@ -10,6 +11,7 @@ import { ResumoComparativo } from './components/ResumoComparativo'
 import { Ranking } from './components/Ranking'
 import { CenarioClima } from './components/CenarioClima'
 import { PlanoPlantio } from './components/PlanoPlantio'
+import { Rotacoes } from './components/Rotacoes'
 import { ChatAgente } from './components/ChatAgente'
 import type { Mensagem } from './components/ChatAgente'
 import logo from './assets/logo-ciclus.png'
@@ -23,7 +25,7 @@ interface Resultado {
   ranking: ItemRanking[]
 }
 
-type Aba = 'anos' | 'plantar' | 'plano'
+type Aba = 'anos' | 'rotacao' | 'plantar' | 'plano'
 
 /** Área digitada pelo agricultor; null quando está vazia ou inválida. */
 function lerHectares(texto: string): number | null {
@@ -46,6 +48,7 @@ export default function App() {
   const [demonstracao, setDemonstracao] = useState(true)
   const [culturaPlanoId, setCulturaPlanoId] = useState('')
   const [fonteClima, setFonteClima] = useState<string | null>(null)
+  const [soloEstimado, setSoloEstimado] = useState<SoloEstimado | null>(null)
   const hectares = lerHectares(respostas.hectares)
   const pedido = useRef(0)
 
@@ -62,6 +65,19 @@ export default function App() {
       })
       .catch(() => setErro('Não consegui falar com o servidor. O backend está rodando na porta 8080?'))
   }, [])
+
+  // Ao marcar o terreno, busca no mapa de solos que tipo de terra é ali (só uma sugestão).
+  useEffect(() => {
+    setSoloEstimado(null)
+    if (!ponto) return
+    let cancelado = false
+    api.soloDoPonto(ponto)
+      .then((s) => !cancelado && setSoloEstimado(s))
+      .catch(() => undefined)
+    return () => {
+      cancelado = true
+    }
+  }, [ponto])
 
   // Depois do primeiro "Ver resultado", mudar o terreno ou um seletor recalcula sozinho.
   useEffect(() => {
@@ -125,7 +141,7 @@ export default function App() {
           <h1 className="topo__logo">
             <img src={logo} alt="Ciclus" width="120" height="36" />
           </h1>
-          <p>E se você tivesse plantado outra coisa? Simulador de culturas com dados de satélite da NASA</p>
+          <p>Qual rotação de culturas protege a sua terra e a sua renda? Simulador com dados de satélite da NASA</p>
         </div>
         <span className="topo__demo">
           {fonteClima === 'nasa'
@@ -154,6 +170,19 @@ export default function App() {
               ? `Terreno marcado: ${ponto.latitude.toFixed(4)}, ${ponto.longitude.toFixed(4)}. Clique em outro lugar para mudar.`
               : 'Clique no mapa onde fica o seu terreno.'}
           </p>
+          {soloEstimado && (
+            <p className="mapa__solo">
+              Pelo mapa de solos, a terra aqui parece <b>{NOME_SOLO[soloEstimado.tipo].split(' (')[0].toLowerCase()}</b>
+              : {Math.round(soloEstimado.argila)}% de argila e {Math.round(soloEstimado.areia)}% de areia.{' '}
+              {respostas.solo !== soloEstimado.tipo && (
+                <button type="button" className="link"
+                  onClick={() => setRespostas({ ...respostas, solo: soloEstimado.tipo })}>
+                  usar esta terra
+                </button>
+              )}
+              <span className="mapa__fonte">Fonte: {soloEstimado.fonte}. É uma estimativa, não análise de solo.</span>
+            </p>
+          )}
         </section>
 
         <section className="painel">
@@ -161,6 +190,10 @@ export default function App() {
             <button type="button" role="tab" aria-selected={aba === 'anos'} className={aba === 'anos' ? 'aba aba--ativa' : 'aba'}
               onClick={() => setAba('anos')}>
               Ano a ano
+            </button>
+            <button type="button" role="tab" aria-selected={aba === 'rotacao'} className={aba === 'rotacao' ? 'aba aba--ativa' : 'aba'}
+              onClick={() => setAba('rotacao')}>
+              Rotação
             </button>
             <button type="button" role="tab" aria-selected={aba === 'plantar'} className={aba === 'plantar' ? 'aba aba--ativa' : 'aba'}
               onClick={() => setAba('plantar')}>
@@ -185,13 +218,13 @@ export default function App() {
                 <div className="vazio__texto">
                   <h2>Seu terreno, ano a ano</h2>
                   <ol>
-                    <li>Escolha o que você plantou e o que quer comparar, lá em cima.</li>
+                    <li>Escolha o que você planta hoje e o que quer comparar, lá em cima.</li>
                     <li>Clique no mapa onde fica o terreno.</li>
                     <li>Aperte <b>Ver resultado</b>.</li>
                   </ol>
                   <p>
-                    Você vai arrastar uma barra de anos: para trás, vê como cada cultura teria ido com o clima que
-                    realmente aconteceu ali; para frente, vê a previsão.
+                    Você vai ver, ano a ano, como cada cultura teria ido com o clima que realmente aconteceu ali, e
+                    comparar rotações de culturas pelo clima e pela saúde da terra.
                   </p>
                 </div>
                 <img className="vazio__tatu" src={tatuPlantando} alt="" width="150" height="147" />
@@ -220,6 +253,17 @@ export default function App() {
                 )}
                 <ResumoComparativo plantada={resultado.plantada} alternativa={resultado.alternativa} />
               </>
+            )}
+
+            {resultado && ponto && aba === 'rotacao' && (
+              <Rotacoes
+                ponto={ponto}
+                solo={respostas.solo}
+                hectares={hectares}
+                culturaPlantadaId={respostas.culturaPlantadaId}
+                culturaTesteId={respostas.culturaTesteId || null}
+                aoPlanejar={planejarCom}
+              />
             )}
 
             {resultado && aba === 'plantar' && (

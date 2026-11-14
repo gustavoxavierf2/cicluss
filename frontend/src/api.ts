@@ -1,4 +1,6 @@
-import type { Cenario, Cultura, ItemRanking, Planejamento, Ponto, Simulacao, TipoSolo } from './tipos'
+import type {
+  Cenario, ComparacaoEstrategias, Cultura, ItemRanking, Planejamento, Ponto, Simulacao, SoloEstimado, TipoSolo,
+} from './tipos'
 
 const BASE = import.meta.env.VITE_API_URL ?? ''
 
@@ -42,6 +44,18 @@ export const api = {
     chamar<Cenario>('/api/cenarios', {
       ...ponto, solo, culturaId, hectares, anoBase, temperaturaMedia, precipitacao, umidadeSolo,
     }),
+
+  estrategias: (
+    ponto: Ponto,
+    solo: TipoSolo,
+    hectares: number | null,
+    culturaPlantadaId: string,
+    culturaTesteId: string | null,
+  ) =>
+    chamar<ComparacaoEstrategias>('/api/estrategias', { ...ponto, solo, hectares, culturaPlantadaId, culturaTesteId }),
+
+  soloDoPonto: (ponto: Ponto) =>
+    chamar<SoloEstimado>(`/api/solo?latitude=${ponto.latitude}&longitude=${ponto.longitude}`),
 
   planejar: (ponto: Ponto, solo: TipoSolo, hectares: number | null, culturaPrincipalId: string, anos: number) =>
     chamar<Planejamento>('/api/planejamentos', { ...ponto, solo, hectares, culturaPrincipalId, anos }),

@@ -1,6 +1,7 @@
 package br.com.fieldshift.core.clima;
 
 import br.com.fieldshift.core.modelo.ClimaAnual;
+import br.com.fieldshift.core.modelo.Trimestre;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -28,10 +29,12 @@ import java.util.function.ToDoubleFunction;
  *   - precipitacao          PRECTOTCORR_SUM (soma do ano, mm)
  *   - umidadeSolo           GWETROOT (umidade da zona de raiz, 0 a 1)
  *   - evapotranspiracao     EVLAND (mm/dia, média do ano) × dias do ano
+ *   - trimestres            chuva (PRECTOTCORR_SUM) e temperatura (T2M) dos meses de cada trimestre
  *
  * Anos futuros: a NASA POWER não tem previsão. A projeção aqui é a TENDÊNCIA (reta de mínimos
  * quadrados) dos últimos {@value #ANOS_DE_HISTORICO} anos de cada variável, esticada para frente.
- * Não é modelo climático: não prevê seca ou enchente de um ano específico.
+ * Não é modelo climático: não prevê seca ou enchente de um ano específico. Os trimestres dos anos
+ * futuros repetem a distribuição média do histórico (quanto do ano costuma chover em cada época).
  */
 public class NasaPowerClimaProvider implements ClimaProvider {
 
@@ -86,11 +89,14 @@ public class NasaPowerClimaProvider implements ClimaProvider {
             if (ano <= anoAtual) {
                 serie.add(historico.get(ano - primeiro));
             } else {
+                double chuvaDoAno = Math.round(Math.max(0, chuva.em(ano)));
+                double temperaturaDoAno = arredondar(temperatura.em(ano), 1);
                 serie.add(new ClimaAnual(ano, true,
-                        arredondar(temperatura.em(ano), 1), arredondar(maxima.em(ano), 1), arredondar(minima.em(ano), 1),
-                        Math.round(Math.max(0, chuva.em(ano))),
+                        temperaturaDoAno, arredondar(maxima.em(ano), 1), arredondar(minima.em(ano), 1),
+                        chuvaDoAno,
                         arredondar(Math.max(0, Math.min(1, umidade.em(ano))), 2),
-                        Math.round(Math.max(0, evapotranspiracao.em(ano)))));
+                        Math.round(Math.max(0, evapotranspiracao.em(ano))),
+                        trimestresTipicos(historico, chuvaDoAno, temperaturaDoAno)));
             }
         }
         return serie;
@@ -122,9 +128,54 @@ public class NasaPowerClimaProvider implements ClimaProvider {
                     arredondar(mediaDosMeses(parametros, "T2M_MIN", ano), 1),
                     Math.round(anual(parametros, "PRECTOTCORR_SUM", ano)),
                     arredondar(anual(parametros, "GWETROOT", ano), 2),
-                    Math.round(evaporacaoPorDia * Year.of(ano).length())));
+                    Math.round(evaporacaoPorDia * Year.of(ano).length()),
+                    trimestres(parametros, ano)));
         }
         return List.copyOf(historico);
+    }
+
+    /** Chuva somada e temperatura média dos 3 meses de cada trimestre; null se faltar algum mês. */
+    private static List<Trimestre> trimestres(JsonNode parametros, int ano) {
+        List<Trimestre> lista = new ArrayList<>();
+        for (int t = 0; t < 4; t++) {
+            double chuva = 0, temperatura = 0;
+            for (int mes = t * 3 + 1; mes <= t * 3 + 3; mes++) {
+                String chave = String.format(Locale.ROOT, "%d%02d", ano, mes);
+                double c = parametros.path("PRECTOTCORR_SUM").path(chave).asDouble(SEM_DADO);
+                double temp = parametros.path("T2M").path(chave).asDouble(SEM_DADO);
+                if (c == SEM_DADO || temp == SEM_DADO) {
+                    return null;
+                }
+                chuva += c;
+                temperatura += temp;
+            }
+            lista.add(new Trimestre(Trimestre.NOMES.get(t), Math.round(chuva), arredondar(temperatura / 3, 1)));
+        }
+        return List.copyOf(lista);
+    }
+
+    /**
+     * Trimestres de um ano futuro: a chuva do ano repartida como costuma ser no histórico, e a
+     * temperatura do ano somada à diferença típica de cada trimestre.
+     */
+    static List<Trimestre> trimestresTipicos(List<ClimaAnual> historico, double chuvaDoAno, double temperaturaDoAno) {
+        List<ClimaAnual> comTrimestres = historico.stream().filter(c -> c.trimestres() != null).toList();
+        if (comTrimestres.isEmpty()) {
+            return null;
+        }
+        List<Trimestre> lista = new ArrayList<>();
+        for (int t = 0; t < 4; t++) {
+            final int i = t;
+            double parte = comTrimestres.stream()
+                    .mapToDouble(c -> c.precipitacao() <= 0 ? 0.25 : c.trimestres().get(i).chuva() / c.precipitacao())
+                    .average().orElse(0.25);
+            double diferenca = comTrimestres.stream()
+                    .mapToDouble(c -> c.trimestres().get(i).temperaturaMedia() - c.temperaturaMedia())
+                    .average().orElse(0);
+            lista.add(new Trimestre(Trimestre.NOMES.get(t), Math.round(chuvaDoAno * parte),
+                    arredondar(temperaturaDoAno + diferenca, 1)));
+        }
+        return List.copyOf(lista);
     }
 
     /** Valor anual da NASA (chave AAAA13). Se ela não trouxer, usa a média dos meses (soma, para a chuva). */

@@ -6,6 +6,7 @@ import br.com.fieldshift.core.modelo.ResultadoAno;
 import br.com.fieldshift.core.modelo.Resumo;
 import br.com.fieldshift.core.modelo.Safra;
 import br.com.fieldshift.core.modelo.Simulacao;
+import br.com.fieldshift.core.modelo.Trimestre;
 import br.com.fieldshift.core.servico.Textos;
 
 import java.util.Locale;
@@ -30,6 +31,19 @@ public final class ContextoEmTexto {
             simulacao(sb, "CULTURA QUE ELE QUER TESTAR NO LUGAR", ctx.alternativa());
         } else {
             sb.append("CULTURA QUE ELE QUER TESTAR NO LUGAR: nenhuma escolhida.\n\n");
+        }
+
+        if (plantada.anos().stream().anyMatch(a -> a.clima().trimestres() != null)) {
+            sb.append("CHUVA POR ÉPOCA DO ANO (mm em cada trimestre; serve para dizer em que época faltou ou sobrou água)\n");
+            for (ResultadoAno a : plantada.anos()) {
+                if (a.clima().trimestres() == null) continue;
+                sb.append(a.ano()).append(a.projetado() ? " (previsão)" : "");
+                for (Trimestre t : a.clima().trimestres()) {
+                    sb.append(String.format(Locale.ROOT, " | %s %.0f mm", t.nome(), t.chuva()));
+                }
+                sb.append('\n');
+            }
+            sb.append('\n');
         }
 
         sb.append("RANKING DAS CULTURAS PARA ESTE TERRENO (pelos anos que já aconteceram)\n");

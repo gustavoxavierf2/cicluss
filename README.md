@@ -1,6 +1,6 @@
 # Ciclus
 
-**E se você tivesse plantado outra coisa?** Simulador para o pequeno produtor do Sudoeste da Bahia: ele clica no terreno no mapa e arrasta uma barra de anos. Para trás, vê como cada cultura teria se saído com o clima que realmente aconteceu ali; para frente, vê a previsão.
+**Qual rotação de culturas protege a sua terra e a sua renda?** Simulador para o pequeno produtor do Sudoeste da Bahia: ele clica no terreno no mapa e compara estratégias de rotação (incluindo o que faz hoje) com o clima que realmente aconteceu ali, medido pela NASA, e com sinais de saúde do solo. Também vê cada cultura ano a ano, a época do ano que pesou e um plano para os próximos anos.
 
 Projeto da equipe para o desafio *Field Shift: Adapting Farms with NASA Data* (NASA Space Apps 2026).
 
@@ -81,6 +81,8 @@ Para testar a imagem na sua máquina: `docker build -t ciclus . && docker run -p
 | GET | `/api/culturas` | Lista de culturas da tabela |
 | POST | `/api/simulacoes` | Linha do tempo de uma cultura no terreno (15 anos para trás e 15 para frente) |
 | POST | `/api/recomendacoes` | Ranking das culturas mais aptas para o terreno |
+| POST | `/api/estrategias` | Compara 3 ou 4 estratégias de rotação (inclui a atual) pelo clima observado e pela saúde do solo |
+| GET | `/api/solo?latitude=&longitude=` | Tipo de terra estimado para o ponto (SoilGrids) |
 | POST | `/api/cenarios` | "E se o clima fosse diferente?": mesma regra da nota com temperatura, chuva e umidade ajustadas |
 | POST | `/api/planejamentos` | Plano de plantio com rotação para os próximos 1, 3 ou 5 anos |
 | POST | `/api/agente` | Pergunta ao agente sobre os resultados |
@@ -111,6 +113,7 @@ Com `nasa` (`core/clima/NasaPowerClimaProvider`):
 | Chuva do ano | `PRECTOTCORR_SUM`, soma do ano em mm |
 | Umidade da terra | `GWETROOT`, umidade da zona de raiz (0 a 1) |
 | Água que a planta perde | `EVLAND` (mm/dia) × dias do ano |
+| Chuva e temperatura por trimestre | soma mensal de `PRECTOTCORR_SUM` e média mensal de `T2M` |
 
 Pontos de atenção:
 
@@ -118,6 +121,27 @@ Pontos de atenção:
 - **Umidade da terra:** o `GWETROOT` fica perto de 0,6 na região, então o limite de "solo seco" (abaixo de 0,25), pensado para os dados falsos, quase nunca dispara. Precisa ser calibrado.
 - **Evapotranspiração:** `EVLAND` é a água que de fato evaporou (real), não a demanda potencial. A regra "chuva menor que 60% da evapotranspiração" também dispara pouco com ela.
 - O resultado de cada ponto fica em memória (a grade da NASA é de 0,5°), então só a primeira consulta de um terreno espera a NASA.
+
+## Como o Ciclus responde ao desafio Field Shift
+
+| O desafio pede | Onde está no Ciclus |
+|---|---|
+| Comparar pelo menos três estratégias de rotação, incluindo a atual | Aba **Rotação** (`core/servico/EstrategiaService`): o que o agricultor faz hoje, a cultura dele alternada com a que quer testar, rotação com leguminosa e rotação de três grupos (gramínea, leguminosa, raiz) |
+| Saúde do solo | Quatro sinais por estratégia: nitrogênio (tem leguminosa?), pragas e doenças (troca o tipo de planta?), terra coberta (meses por ano sem cultura, pelo ciclo de cada uma) e palha/matéria orgânica (tem gramínea?) |
+| Épocas em que a terra fica descoberta e em que a cultura sofre mais | Meses de terra descoberta por estratégia; época mais seca do terreno; no detalhe de cada ano, a chuva e a temperatura por trimestre com a época mais seca em destaque |
+| Dados da NASA | Clima da NASA POWER (ver "De onde vem o clima") |
+| Solo do lugar | Clique no mapa consulta o SoilGrids (argila, areia e silte de 0 a 30 cm) e sugere o tipo de terra |
+
+Limites que valem dizer no pitch:
+
+- Os sinais de saúde do solo são **regras simples** tiradas do grupo e do ciclo de cada cultura, não medição nem modelo de solo.
+- A nota de cada ano continua vindo do **total do ano** (temperatura média e chuva). Os trimestres mostram em que época faltou ou sobrou água, mas ainda não entram na nota.
+- O SoilGrids é um mapa global de 250 m e **não é dado da NASA**; serve de sugestão para quem não sabe o tipo da terra.
+
+Ainda não implementado (entra na arquitetura como próximo passo):
+
+- **SMAP (NASA)** para umidade do solo medida por satélite, no lugar da umidade de reanálise da NASA POWER.
+- **MODIS / Landsat (NDVI)** para ver de fato quando o terreno fica descoberto e quando a planta está em estresse, em vez de estimar pelo ciclo da cultura.
 
 ## Safra, valores e planejamento
 
@@ -132,6 +156,8 @@ Pontos de atenção:
   - `servico/AptidaoCalculadora` — compara o clima do ano com a faixa da cultura e dá nota 0–100.
   - `servico/SimuladorService` — monta a linha do tempo.
   - `servico/RecomendacaoService` — ranking das culturas.
+  - `servico/EstrategiaService` — comparação de estratégias de rotação e sinais de saúde do solo.
+  - `solo/SoilGridsSoloProvider` — tipo de terra do ponto pelo SoilGrids.
   - `servico/SafraCalculadora` — estimativa de safra e dinheiro por hectare.
   - `servico/PlanejamentoService` — plano de plantio com rotação.
   - `clima/ClimaProvider` — de onde vem o clima. `NasaPowerClimaProvider` (NASA POWER), `MockClimaProvider` (falso) ou `HttpClimaProvider` (serviço próprio).
@@ -143,6 +169,8 @@ Pontos de atenção:
 
 - [x] Clima real da NASA POWER.
 - [ ] Previsão dos anos futuros com modelo climático (hoje é a tendência do histórico).
+- [ ] Levar os trimestres para a nota (hoje a nota usa só o total do ano).
+- [ ] SMAP para umidade do solo e MODIS/Landsat (NDVI) para solo descoberto e estresse da planta.
 - [ ] Calibrar os limites de solo seco e de evapotranspiração para os dados da NASA.
 - [ ] Tabela de culturas com valores do EcoCrop (FAO) / ZARC (Embrapa).
 - [ ] Produtividade, preço e custo reais (CONAB/IBGE) no lugar dos valores de exemplo.

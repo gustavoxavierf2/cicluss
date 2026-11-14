@@ -67,6 +67,8 @@ Uma lista JSON com **exatamente um item por ano**, de `inicio` até `fim`, em or
 | `umidadeSolo` | 0 a 1 | média do ano da umidade da zona de raiz (0 = seco, 1 = saturado) |
 | `evapotranspiracao` | mm | **soma** do ano |
 
+Campo opcional `trimestres`: lista com 4 itens (`jan–mar`, `abr–jun`, `jul–set`, `out–dez`), cada um com `nome`, `chuva` (soma em mm) e `temperaturaMedia` (°C). Com ele o site mostra a época do ano que pesou; sem ele, mostra só o total do ano.
+
 Observações:
 
 - Se a fonte vier em mm/dia, multiplique pela quantidade de dias (ou some os diários).

@@ -33,6 +33,15 @@ public final class Requisicoes {
             Double umidadeSolo) {
     }
 
+    public record Estrategias(
+            @NotNull @DecimalMin("-90") @DecimalMax("90") Double latitude,
+            @NotNull @DecimalMin("-180") @DecimalMax("180") Double longitude,
+            TipoSolo solo,
+            @DecimalMin("0.01") @DecimalMax("100000") Double hectares,
+            @NotBlank String culturaPlantadaId,
+            String culturaTesteId) {
+    }
+
     public record Planejamento(
             @NotNull @DecimalMin("-90") @DecimalMax("90") Double latitude,
             @NotNull @DecimalMin("-180") @DecimalMax("180") Double longitude,

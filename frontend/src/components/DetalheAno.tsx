@@ -1,6 +1,7 @@
 import type { ClimaAnual, ResultadoAno, Safra, Simulacao } from '../tipos'
 import { NOME_NIVEL } from '../tipos'
 import { AvisoEstimativa, SafraEstimada } from './SafraEstimada'
+import { EpocasDoAno } from './EpocasDoAno'
 
 interface Props {
   plantada: Simulacao
@@ -74,6 +75,7 @@ export function DetalheAno({ plantada, alternativa, ano }: Props) {
       </div>
       {(safraA || safraB) && <AvisoEstimativa />}
       <Clima clima={a.clima} />
+      <EpocasDoAno clima={a.clima} />
     </section>
   )
 }

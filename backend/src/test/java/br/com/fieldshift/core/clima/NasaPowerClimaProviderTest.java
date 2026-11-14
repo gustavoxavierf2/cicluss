@@ -94,6 +94,20 @@ class NasaPowerClimaProviderTest {
     }
 
     @Test
+    void trazOsQuatroTrimestresDeCadaAno() {
+        List<ClimaAnual> serie = provider(resposta(true)).serieAnual(-14.866, -40.839, 2025, 2026, ANO_ATUAL);
+        ClimaAnual observado = serie.get(0);
+        assertThat(observado.trimestres()).extracting(t -> t.nome())
+                .containsExactly("jan–mar", "abr–jun", "jul–set", "out–dez");
+        assertThat(observado.trimestres().get(0).chuva()).isEqualTo(228);          // 3 meses de 910/12 mm
+        assertThat(observado.trimestres().get(0).temperaturaMedia()).isEqualTo(22.9);
+        // Ano futuro: a chuva do ano repartida como no histórico (aqui, igual nos 4 trimestres).
+        ClimaAnual futuro = serie.get(1);
+        assertThat(futuro.trimestres()).hasSize(4);
+        assertThat(futuro.trimestres().get(2).chuva()).isEqualTo(225);
+    }
+
+    @Test
     void pedeOsParametrosCertosEGuardaEmCache() {
         NasaPowerClimaProvider p = provider(resposta(true));
         p.serieAnual(-14.866, -40.839, 2011, 2040, ANO_ATUAL);

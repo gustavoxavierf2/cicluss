@@ -47,6 +47,15 @@ AgroClimate, SIMAGRI e DSSAT fazem algo parecido para técnicos e pesquisadores.
 mapa, poucas perguntas e resposta em linguagem simples, com foco no pequeno produtor brasileiro.
 Visual inspirado no painel do AgroClimate.
 
+## Alinhamento com o edital (14/11/2026)
+O foco do desafio é rotação de culturas e saúde do solo, não só trocar uma cultura por outra. Por isso:
+7. Aba "Rotação": compara 3 ou 4 estratégias de rotação, sempre incluindo o que o agricultor faz hoje,
+   com o clima que aconteceu no terreno e quatro sinais de saúde do solo (nitrogênio, pragas, terra
+   coberta, palha).
+8. Época do ano: cada ano mostra a chuva e a temperatura por trimestre e destaca a época mais seca.
+9. Solo do lugar: o clique no mapa consulta o SoilGrids e sugere o tipo de terra.
+SMAP e MODIS/Landsat (NDVI) ficam como próximos passos; ainda não estão no código.
+
 ## Fonte do clima (decidido em 14/11/2026)
 O clima vem da NASA POWER, direto da API pública (temperatura, chuva, umidade da zona de raiz e
 evapotranspiração). Como a NASA POWER não tem previsão, os anos futuros são a tendência dos últimos

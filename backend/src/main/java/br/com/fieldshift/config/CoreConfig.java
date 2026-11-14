@@ -7,9 +7,11 @@ import br.com.fieldshift.core.clima.MockClimaProvider;
 import br.com.fieldshift.core.clima.NasaPowerClimaProvider;
 import br.com.fieldshift.core.servico.AptidaoCalculadora;
 import br.com.fieldshift.core.servico.CulturaRepository;
+import br.com.fieldshift.core.servico.EstrategiaService;
 import br.com.fieldshift.core.servico.PlanejamentoService;
 import br.com.fieldshift.core.servico.RecomendacaoService;
 import br.com.fieldshift.core.servico.SimuladorService;
+import br.com.fieldshift.core.solo.SoilGridsSoloProvider;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -71,6 +73,16 @@ public class CoreConfig {
     @Bean
     public RecomendacaoService recomendacaoService(SimuladorService simulador, CulturaRepository culturas) {
         return new RecomendacaoService(simulador, culturas);
+    }
+
+    @Bean
+    public EstrategiaService estrategiaService(SimuladorService simulador, CulturaRepository culturas) {
+        return new EstrategiaService(simulador, culturas);
+    }
+
+    @Bean
+    public SoilGridsSoloProvider soloProvider(ObjectMapper mapper) {
+        return new SoilGridsSoloProvider(mapper);
     }
 
     @Bean
