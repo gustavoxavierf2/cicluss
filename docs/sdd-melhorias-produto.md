@@ -36,9 +36,10 @@ Fontes de dados que podem ser usadas hoje:
 
 ### RF-01 — Seleção de intervalo de anos
 
-Na aba **Ano a ano**, substituir o significado principal do controle por um intervalo inclusivo `[ano inicial, ano final]`.
+Na aba **Ano a ano**, manter a barra temporal como interação principal, evoluindo-a para selecionar um intervalo inclusivo `[ano inicial, ano final]` com dois marcadores deslizantes. Não usar campos de texto para digitar o início e o fim.
 
-- O usuário deve conseguir selecionar início e fim no histórico disponível.
+- O usuário deve conseguir selecionar início e fim arrastando os marcadores na barra do histórico disponível.
+- A barra deve mostrar visualmente a faixa selecionada entre os dois marcadores.
 - O intervalo padrão deve preservar a experiência atual: começar no ano atual selecionado, com o fim igual ao mesmo ano.
 - O sistema deve normalizar o intervalo quando o usuário arrastar os controles em ordem inversa.
 - O rótulo deve mostrar claramente `De YYYY até YYYY` e a quantidade de anos incluídos.
@@ -153,7 +154,8 @@ O relatório deve separar fato observado, tendência projetada, estimativa econ�
 
 ```text
 Período analisado
-[ início: 1994 ] ───────── [ fim: 2024 ]
+1994 ───────●════════════════●────── 2024
+            início           fim
 De 1994 até 2024 · 31 anos · 5 projetados
 
 [Resumo do período]
