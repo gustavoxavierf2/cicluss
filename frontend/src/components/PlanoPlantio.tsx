@@ -78,9 +78,9 @@ export function PlanoPlantio(props: Props) {
   }
 
   return (
-    <section className="plano">
+    <section className="plano" id="plano">
       <div className="plano__topo">
-        <h2 className="titulo-visao">Simulador de rotação</h2>
+        <h2 className="titulo-visao">O plano, época por época</h2>
         {atual && (
           <dl className="plano__clima" aria-live="polite">
             <div>

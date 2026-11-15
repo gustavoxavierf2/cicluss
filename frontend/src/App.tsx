@@ -8,6 +8,9 @@ import type { Respostas } from './components/Seletores'
 import { BarraAnos } from './components/BarraAnos'
 import { DetalheAno } from './components/DetalheAno'
 import { ResumoComparativo } from './components/ResumoComparativo'
+import { ResumoPeriodo } from './components/ResumoPeriodo'
+import type { IntervaloAnos } from './intervalo'
+import { agregar } from './intervalo'
 import { Ranking } from './components/Ranking'
 import { CenarioClima } from './components/CenarioClima'
 import { PlanoPlantio } from './components/PlanoPlantio'
@@ -26,14 +29,13 @@ interface Resultado {
   ranking: ItemRanking[]
 }
 
-type Aba = 'anos' | 'rotacao' | 'plantar' | 'plano'
+type Aba = 'anos' | 'rotacao' | 'plantar'
 
-/** As quatro visões do resultado, escolhidas no menu da direita. */
+/** As três visões do resultado, escolhidas no menu da direita. */
 const VISOES: { id: Aba; nome: string; icone: string }[] = [
   { id: 'anos', nome: 'Ano a ano', icone: 'M7 3v3M17 3v3M4 9h16M5 6h14a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1z' },
-  { id: 'rotacao', nome: 'Rotação de culturas', icone: 'M20 12a8 8 0 1 1-2.34-5.66M20 4v4h-4' },
+  { id: 'rotacao', nome: 'Rotação e planejamento', icone: 'M20 12a8 8 0 1 1-2.34-5.66M20 4v4h-4' },
   { id: 'plantar', nome: 'O que plantar', icone: 'M12 21v-9M12 12c0-4 3-6 7-6 0 4-3 6-7 6zM12 15c0-3-2-5-6-5 0 3 2 5 6 5z' },
-  { id: 'plano', nome: 'Planejamento', icone: 'M9 6h11M9 12h11M9 18h11M4 6h.01M4 12h.01M4 18h.01' },
 ]
 
 /** Área digitada pelo agricultor; null quando está vazia ou inválida. */
@@ -48,6 +50,8 @@ export default function App() {
   const [respostas, setRespostas] = useState<Respostas>({ solo: 'NAO_SEI', culturaPlantadaId: '', culturaTesteId: '', hectares: '1' })
   const [ativo, setAtivo] = useState(false)
   const [resultado, setResultado] = useState<Resultado | null>(null)
+  // O intervalo é o foco da aba "Ano a ano"; `ano` é o ano aberto em detalhe, sempre dentro dele.
+  const [intervalo, setIntervalo] = useState<IntervaloAnos>({ inicio: 0, fim: 0 })
   const [ano, setAno] = useState(0)
   const [aba, setAba] = useState<Aba>('anos')
   const [carregando, setCarregando] = useState(false)
@@ -110,7 +114,10 @@ export default function App() {
       .then(([plantada, alternativa, ranking]) => {
         if (meu !== pedido.current) return
         setResultado({ plantada, alternativa, ranking })
-        setAno((atual) => (plantada.anos.some((a) => a.ano === atual) ? atual : plantada.anoAtual))
+        const existe = (a: number) => plantada.anos.some((x) => x.ano === a)
+        setAno((atual) => (existe(atual) ? atual : plantada.anoAtual))
+        // Padrão: só o último ano completo, como era antes de existir o intervalo.
+        setIntervalo((i) => (existe(i.inicio) && existe(i.fim) ? i : { inicio: plantada.anoAtual, fim: plantada.anoAtual }))
       })
       .catch((e: Error) => meu === pedido.current && setErro(e.message))
       .finally(() => meu === pedido.current && setCarregando(false))
@@ -166,13 +173,42 @@ export default function App() {
     setPainelAberto(true)
   }
 
+  /** Abre o plano (segunda metade de "Rotação e planejamento") com a cultura escolhida. */
   function planejarCom(culturaId: string) {
     setCulturaPlanoId(culturaId)
-    setAba('plano')
+    setAba('rotacao')
     setPainelAberto(true)
+    setTimeout(() => document.getElementById('plano')?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 100)
+  }
+
+  /**
+   * Histórico observado para o relatório: o clima vale para qualquer cultura; o desempenho só entra
+   * se a cultura do plano for uma das duas já simuladas (não busca nada novo).
+   */
+  function historicoDe(culturaId: string) {
+    if (!resultado) return null
+    const { plantada, alternativa } = resultado
+    const doPlano = [plantada, alternativa].find((x) => x?.cultura.id === culturaId) ?? null
+    const g = agregar(doPlano ?? plantada, null, { inicio: plantada.anos[0].ano, fim: plantada.anoAtual })
+    return g && { ...g, temCultura: doPlano !== null }
+  }
+
+  function mudarIntervalo(i: IntervaloAnos) {
+    setIntervalo(i)
+    setAno((atual) => (atual < i.inicio || atual > i.fim ? i.fim : atual))
   }
 
   const anos = resultado?.plantada.anos ?? []
+  const agregado = resultado ? agregar(resultado.plantada, resultado.alternativa, intervalo) : null
+  const barraAnos = resultado && (
+    <BarraAnos
+      primeiro={anos[0].ano}
+      ultimo={anos[anos.length - 1].ano}
+      anoAtual={resultado.plantada.anoAtual}
+      intervalo={intervalo}
+      aoMudar={mudarIntervalo}
+    />
+  )
   // O painel da esquerda aparece sempre: com o guia no começo, depois com o resultado ou o erro.
   const temPainel = true
   const sugestoes = resultado
@@ -184,7 +220,7 @@ export default function App() {
     : []
 
   return (
-    <div className={`app app--mapa ${temPainel && painelAberto ? 'app--painel' : ''} ${painelGrande ? 'app--painel-grande' : ''}`}>
+    <div className={`app app--mapa ${temPainel && painelAberto ? 'app--painel' : ''} ${painelGrande ? 'app--painel-grande' : ''} ${chatAberto ? 'app--chat' : ''}`}>
       <div className="palco">
         <MapaTerreno ponto={ponto} aoEscolher={setPonto} />
       </div>
@@ -286,15 +322,7 @@ export default function App() {
       )}
 
       {resultado && aba === 'anos' && !(painelGrande && painelAberto) && (
-        <div className="tempo">
-          <BarraAnos
-            primeiro={anos[0].ano}
-            ultimo={anos[anos.length - 1].ano}
-            anoAtual={resultado.plantada.anoAtual}
-            ano={ano}
-            aoMudar={setAno}
-          />
-        </div>
+        <div className="tempo">{barraAnos}</div>
       )}
 
       {temPainel && !painelAberto && (
@@ -371,16 +399,10 @@ export default function App() {
 
             {resultado && aba === 'anos' && (
               <>
-                <ResumoComparativo plantada={resultado.plantada} alternativa={resultado.alternativa} />
-                {painelGrande && (
-                  <BarraAnos
-                    primeiro={anos[0].ano}
-                    ultimo={anos[anos.length - 1].ano}
-                    anoAtual={resultado.plantada.anoAtual}
-                    ano={ano}
-                    aoMudar={setAno}
-                  />
-                )}
+                {painelGrande && barraAnos}
+                {agregado && agregado.anos > 1
+                  ? <ResumoPeriodo agregado={agregado} plantada={resultado.plantada} ano={ano} aoEscolherAno={setAno} />
+                  : <ResumoComparativo plantada={resultado.plantada} alternativa={resultado.alternativa} />}
                 <DetalheAno plantada={resultado.plantada} alternativa={resultado.alternativa} ano={ano} />
                 {ponto && (
                   <CenarioClima
@@ -396,33 +418,33 @@ export default function App() {
             )}
 
             {resultado && ponto && aba === 'rotacao' && (
-              <Rotacoes
-                ponto={ponto}
-                solo={respostas.solo}
-                hectares={hectares}
-                culturaPlantadaId={respostas.culturaPlantadaId}
-                culturaTesteId={respostas.culturaTesteId || null}
-                aoPlanejar={planejarCom}
-              />
+              <>
+                <Rotacoes
+                  ponto={ponto}
+                  solo={respostas.solo}
+                  hectares={hectares}
+                  culturaPlantadaId={respostas.culturaPlantadaId}
+                  culturaTesteId={respostas.culturaTesteId || null}
+                  culturaDoPlanoId={culturaPlanoId || respostas.culturaPlantadaId}
+                  aoPlanejar={planejarCom}
+                />
+                <PlanoPlantio
+                  ponto={ponto}
+                  solo={respostas.solo}
+                  hectares={hectares}
+                  culturas={culturas}
+                  culturaId={culturaPlanoId || respostas.culturaPlantadaId}
+                  aoEscolherCultura={setCulturaPlanoId}
+                  horizonte={horizonte}
+                  aoMudarHorizonte={setHorizonte}
+                  aoImprimir={imprimirRelatorio}
+                  imprimindo={imprimindo}
+                />
+              </>
             )}
 
             {resultado && aba === 'plantar' && (
               <Ranking itens={resultado.ranking} aoTestar={compararCom} aoPlanejar={planejarCom} />
-            )}
-
-            {resultado && ponto && aba === 'plano' && (
-              <PlanoPlantio
-                ponto={ponto}
-                solo={respostas.solo}
-                hectares={hectares}
-                culturas={culturas}
-                culturaId={culturaPlanoId || respostas.culturaPlantadaId}
-                aoEscolherCultura={setCulturaPlanoId}
-                horizonte={horizonte}
-                aoMudarHorizonte={setHorizonte}
-                aoImprimir={imprimirRelatorio}
-                imprimindo={imprimindo}
-              />
             )}
           </div>
         </section>
@@ -451,15 +473,23 @@ export default function App() {
         aoCalcular={() => {
           setAtivo(true)
           setCulturaPlanoId('')
-          setAba('plano')
+          setAba('rotacao')
           setPainelAberto(true)
         }}
         aoImprimir={() => imprimirRelatorio()}
         imprimindo={imprimindo}
       />
 
-      {relatorio && ponto && (
-        <RelatorioRotacao plano={relatorio.plano} feitoEm={relatorio.feitoEm} ponto={ponto} solo={respostas.solo} soloEstimado={soloEstimado} />
+      {relatorio && ponto && resultado && (
+        <RelatorioRotacao
+          plano={relatorio.plano}
+          feitoEm={relatorio.feitoEm}
+          ponto={ponto}
+          solo={respostas.solo}
+          soloEstimado={soloEstimado}
+          fonteClima={fonteClima}
+          historico={historicoDe(relatorio.plano.principal.id)}
+        />
       )}
     </div>
   )

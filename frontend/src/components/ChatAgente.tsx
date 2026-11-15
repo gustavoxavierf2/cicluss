@@ -53,7 +53,7 @@ const PERGUNTA: Record<Passo, string> = {
   hectares: 'Quantos hectares tem a área?',
   anos: 'Planejar para quantos anos: 1, 3 ou 5?',
   calculando: 'Calculando com o clima do seu terreno…',
-  fim: 'Pronto! Montei o seu plano de rotação: a linha do tempo está no painel. Quer imprimir o relatório?',
+  fim: 'Pronto! A rotação recomendada e o plano, época por época, estão no painel. Quer imprimir o relatório?',
 }
 
 const SOLOS: [string, TipoSolo, string][] = [
@@ -263,7 +263,8 @@ export function ChatAgente(props: Props) {
 
   if (!aberto) {
     return (
-      <button type="button" className="chat-botao" onClick={aoAbrir}>
+      <button type="button" className="chat-botao" onClick={aoAbrir} aria-expanded={false} aria-controls="chat-raul"
+        aria-label={`Abrir a conversa com o Raul. ${temResultado ? 'Pergunte sobre o seu resultado' : 'Ele te guia passo a passo'}`}>
         <img src={tatuNotebook} alt="" width="64" height="60" />
         <span>
           <b>Tire dúvidas com o Raul</b>
@@ -286,7 +287,7 @@ export function ChatAgente(props: Props) {
     : temResultado ? [...sugestoes, 'Recomeçar as perguntas'] : ['Recomeçar as perguntas']
 
   return (
-    <section className="chat" aria-label="Conversa com o Raul">
+    <section className="chat" id="chat-raul" aria-label="Conversa com o Raul">
       <div className="chat__cabecalho">
         <div>
           <img className="chat__rosto" src={tatuNotebook} alt="" width="44" height="41" />
@@ -300,7 +301,8 @@ export function ChatAgente(props: Props) {
               {voz ? '🔊' : '🔇'}
             </button>
           )}
-          <button type="button" className="fechar" onClick={aoFechar} aria-label="Fechar conversa">
+          <button type="button" className="fechar" onClick={aoFechar} aria-label="Fechar conversa" aria-expanded={true}
+            aria-controls="chat-raul">
             ×
           </button>
         </div>

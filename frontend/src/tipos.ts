@@ -227,6 +227,22 @@ export const NOME_NIVEL: Record<Nivel, string> = {
   RUIM: 'Ruim',
 }
 
+export const NOME_RISCO: Record<Risco, string> = {
+  NENHUM: 'nenhum',
+  SECA: 'seca',
+  CHUVA_EXCESSIVA: 'chuva demais',
+  CALOR: 'calor demais',
+  FRIO: 'frio demais',
+  SOLO_INADEQUADO: 'terra pouco indicada',
+}
+
+/** Umidade da zona de raiz (0 a 1) em palavra do dia a dia. */
+export function terraEmPalavras(umidade: number) {
+  if (umidade < 0.25) return 'seca'
+  if (umidade < 0.4) return 'normal'
+  return 'úmida'
+}
+
 export const NOME_SOLO: Record<TipoSolo, string> = {
   ARENOSO: 'Arenoso (terra solta, clara)',
   ARGILOSO: 'Argiloso (terra pesada, gruda na mão)',

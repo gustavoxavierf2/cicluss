@@ -39,37 +39,34 @@ A tela tem o mapa ao fundo, o resultado e a conversa com o assistente à esquerd
 
 ## O que o usuário consegue fazer
 
-### 1. Ver a cultura ano a ano
+### 1. Ver a cultura ano a ano ou em um período
 
-O sistema mostra uma linha do tempo com até 15 anos observados e 15 anos projetados. Para cada ano, apresenta:
+A barra do tempo cobre até 15 anos observados e 15 projetados e tem dois marcadores: o usuário escolhe um intervalo (de um ano só até o período inteiro), com atalhos para o último ano completo, só o que já aconteceu e todo o período.
 
-- nível de aptidão: bom, atenção ou ruim;
-- nota e motivo principal;
-- risco predominante, como seca, calor, frio, chuva excessiva ou solo pouco indicado;
-- resumo de anos bons e anos de risco;
-- chuva e temperatura por trimestre, quando disponíveis.
+Para um intervalo de vários anos, o sistema resume o período:
 
-### 2. Comparar culturas
+- quantos anos foram bons, de atenção e ruins (com percentual) e a nota média;
+- o problema que mais se repetiu, como seca ou calor;
+- chuva, temperatura e umidade do solo médias, e os anos de menor e maior chuva;
+- colheita e sobra somadas, marcadas como estimativa;
+- aviso quando o período mistura anos observados com anos de previsão.
 
-O produtor pode comparar a cultura atual com outra opção e entender se a troca tende a melhorar o resultado no terreno. Também recebe um ranking das culturas mais aptas, ordenado pelo desempenho observado no histórico e acompanhado de uma justificativa curta.
+Dentro do período, o usuário abre qualquer ano. O detalhe do ano vem em blocos que se leem sozinhos: resultado da cultura, comparação (se houver), condições do ano, chuva ao longo do ano e limitações da leitura.
 
-### 3. Comparar estratégias de rotação
+### 2. Comparar culturas e ver o ranking
 
-Na aba de rotação, o sistema compara estratégias como:
+O produtor pode comparar a cultura atual com outra opção e entender se a troca tende a melhorar o resultado no terreno. A aba **O que plantar** é um ranking das culturas mais aptas, com posição, compatibilidade com clima e terra, anos bons, principal cuidado e as ações Comparar e Planejar. A ordem é pela aptidão observada no histórico, não por preço ou lucro.
+
+### 3. Escolher a rotação e planejar na mesma tela
+
+A aba **Rotação e planejamento** começa pela rotação recomendada: o que plantar ano após ano, por que, qual cuidado merece atenção e como ela se compara ao que o produtor faz hoje. As estratégias avaliadas são:
 
 - repetir a cultura atual;
 - alternar a cultura atual com outra escolhida;
 - fazer rotação com uma leguminosa;
 - alternar três grupos de plantas: gramínea, leguminosa e raiz.
 
-A comparação considera tanto o desempenho climático quanto sinais simples de saúde do solo:
-
-- reposição de nitrogênio;
-- redução de pragas e doenças;
-- tempo de cobertura da terra;
-- presença de palha e matéria orgânica.
-
-O sistema sempre inclui como referência o que o produtor faz hoje.
+A comparação entre elas, com os sinais simples de saúde do solo (reposição de nitrogênio, redução de pragas, tempo de terra coberta e palha), fica em um detalhe que o usuário abre se quiser. Logo abaixo vem o plano época por época (item 6).
 
 ### 4. Simular cenários
 
@@ -92,7 +89,7 @@ Esses valores são orientativos e dependem de preços, custos e produtividades c
 
 ### 6. Simular a rotação em uma linha do tempo
 
-Na aba de planejamento, o usuário escolhe 1, 3 ou 5 anos e desliza uma linha do tempo que começa em janeiro do próximo ano. Cada ano tem três épocas de quatro meses (jan–abr, mai–ago, set–dez). Para a época escolhida, o sistema mostra:
+Na segunda metade da aba de rotação e planejamento, o usuário escolhe 1, 3 ou 5 anos e desliza uma linha do tempo que começa em janeiro do próximo ano. Cada ano tem três épocas de quatro meses (jan–abr, mai–ago, set–dez). Para a época escolhida, o sistema mostra:
 
 - a planta indicada e o papel da época: **safra** (colheita principal, na época mais chuvosa), **safrinha** (segunda colheita, de ciclo curto) ou **entressafra** (época seca, com planta de cobertura);
 - a temperatura média e a umidade média do solo previstas para aqueles meses;
@@ -102,7 +99,7 @@ O plano ainda alterna grupos de culturas entre os anos, aponta uma cultura reser
 
 ### 7. Conversar com o Raul, o assistente
 
-O Raul (o tatu mascote) aparece em dois lugares: no botão **Assistente**, ao lado da logo, e no botão **Tire dúvidas com o Raul**. Ele tem dois papéis:
+O Raul (o tatu mascote) aparece em dois lugares: no botão **Assistente**, ao lado da logo, e no botão **Tire dúvidas com o Raul**, fixo no canto inferior direito da tela. Ele tem dois papéis:
 
 - **Guiar:** faz, uma por vez, as mesmas perguntas do menu (o que planta, comparar com, onde fica o terreno, como é a terra, hectares, anos do plano) e termina oferecendo o relatório. O usuário responde tocando nas opções, escrevendo ou falando; pelo botão Assistente o Raul também lê as perguntas em voz alta (depende do navegador).
 - **Explicar:** depois do resultado, responde dúvidas em linguagem simples, por exemplo:
@@ -116,12 +113,17 @@ O agente não calcula uma nova recomendação por conta própria: ele recebe os 
 
 ### 8. Imprimir o Relatório de Rotação de Culturas
 
-Tanto a conversa com o Raul quanto a aba de planejamento terminam no botão **Imprimir Relatório de Rotação de Culturas**. É uma folha de impressão (ou PDF, pelo “salvar como PDF” do navegador) com as cores do Ciclus e o Raul, pensada como guia prático:
+Tanto a conversa com o Raul quanto o plano terminam no botão **Imprimir Relatório de Rotação de Culturas**. É uma folha de impressão (ou PDF, pelo “salvar como PDF” do navegador) com as cores do Ciclus e o Raul. A linguagem é simples, mas a ordem é a de uma leitura agronômica, para o produtor levar ao técnico:
 
-- os dados informados: área, tipo de solo, localização, cultura principal e período;
-- a rotação ao longo do tempo, ano a ano e época a época, com o porquê de cada plantio;
-- uma explicação curta de por que não plantar sempre a mesma coisa (terra mais forte, menos praga, terra coberta, renda mais segura);
-- o resumo de sobra estimada e anos com risco, com os avisos do plano.
+1. identificação do terreno: localização, área e tipo de solo, dizendo se foi informado ou estimado;
+2. resumo da simulação: cultura principal, período, horizonte e fontes dos dados;
+3. condições da terra: textura estimada, umidade do modelo e limites do mapa de solos;
+4. desempenho climático: o que já aconteceu no terreno e a leitura de cada ano do plano;
+5. plano de rotação: o que plantar em cada época e por quê;
+6. riscos e cuidados: anos de risco, época seca, cobertura e validação local;
+7. resumo econômico, quando há valores.
+
+Cada parte leva um selo de origem: **observado**, **tendência**, **estimativa** ou **regra do Ciclus**. O relatório não calcula nada novo; só organiza o que o plano e a simulação já trouxeram.
 
 ## Dados e regras principais
 

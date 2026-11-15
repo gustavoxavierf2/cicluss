@@ -1,4 +1,4 @@
-import type { ItemRanking, Risco } from '../tipos'
+import type { ItemRanking, Nivel, Risco } from '../tipos'
 
 interface Props {
   itens: ItemRanking[]
@@ -15,20 +15,31 @@ const CUIDADO: Record<Risco, string> = {
   SOLO_INADEQUADO: 'A terra não é a mais indicada',
 }
 
+const COMBINA: Record<Nivel, string> = {
+  BOM: 'Combina bem com o clima e a terra',
+  ATENCAO: 'Combina em parte',
+  RUIM: 'Combina pouco',
+}
+
 /** Lista das culturas, da que mais combina com o terreno para a que menos combina. */
 export function Ranking({ itens, aoTestar, aoPlanejar }: Props) {
   return (
     <section className="ranking">
-      <h2 className="titulo-visao">O que mais combina com a sua terra</h2>
-      <p className="nota-rodape">Pelo clima dos últimos anos e pelo tipo de terra. Não olha preço de venda.</p>
+      <h2 className="titulo-visao">Ranking: o que mais combina com a sua terra</h2>
+      <p className="ranking__regra">
+        Ordem pela <b>aptidão</b>: como cada planta foi com o clima dos últimos anos e o tipo de terra.{' '}
+        <b>Não é ordem de preço nem de lucro.</b>
+      </p>
       <ol className="ranking__lista">
         {itens.map((i) => {
           const nivel = i.nivel.toLowerCase()
           return (
-            <li key={i.cultura.id} className={`cartao-rank cartao-rank--${nivel}`}>
-              <span className={`veredito__selo veredito__selo--${nivel}`} aria-hidden="true">{i.posicao}º</span>
+            <li key={i.cultura.id}
+              className={`cartao-rank cartao-rank--${nivel} ${i.posicao === 1 ? 'cartao-rank--primeiro' : ''}`}>
+              <span className="cartao-rank__posicao" aria-label={`${i.posicao}º lugar`}>{i.posicao}º</span>
               <div className="cartao-rank__texto">
                 <strong>{i.cultura.nome}</strong>
+                <span className={`cartao-rank__combina cor-${nivel}`}>{COMBINA[i.nivel]}</span>
                 <span className="cartao-rank__anos">
                   <b>{i.anosBons}</b> de {i.totalAnos} anos bons
                 </span>
@@ -39,10 +50,12 @@ export function Ranking({ itens, aoTestar, aoPlanejar }: Props) {
                 <span className="cartao-rank__cuidado">{CUIDADO[i.principalRisco]}</span>
               </div>
               <div className="cartao-rank__botoes">
-                <button type="button" className="botao-claro" onClick={() => aoTestar(i.cultura.id)}>
+                <button type="button" className="botao-claro" onClick={() => aoTestar(i.cultura.id)}
+                  aria-label={`Comparar ${i.cultura.nome} com o que você planta`}>
                   Comparar
                 </button>
-                <button type="button" className="botao-claro" onClick={() => aoPlanejar(i.cultura.id)}>
+                <button type="button" className="botao-claro" onClick={() => aoPlanejar(i.cultura.id)}
+                  aria-label={`Planejar com ${i.cultura.nome}`}>
                   Planejar
                 </button>
               </div>

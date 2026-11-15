@@ -1,6 +1,6 @@
 # SDD — Melhorias do painel agronômico e do relatório
 
-**Status:** proposta para implementação  
+**Status:** implementado na branch `feature/sdd-melhorias-produto` (2026-11-15)  
 **Data:** 2026-11-15  
 **Escopo:** frontend React/TypeScript, contratos já existentes da API e relatório de rotação
 
@@ -213,16 +213,16 @@ O componente de relatório deve receber dados já calculados pelo frontend ou um
 
 ## 7. Critérios de aceite
 
-- [ ] É possível escolher um intervalo inclusivo e visualizar início, fim e quantidade de anos.
-- [ ] O intervalo de um ano apresenta resultado equivalente ao detalhe atual.
-- [ ] Intervalos de vários anos exibem contagens, médias, extremos e acumulados coerentes.
-- [ ] O usuário consegue acessar o detalhe de qualquer ano do intervalo.
-- [ ] O detalhe anual não apresenta informação aninhada de modo que impeça a leitura independente.
-- [ ] Rotação e planejamento estão na mesma jornada e a recomendação prioriza cultura, período e motivo.
-- [ ] O ranking mostra posição, aptidão, risco e ações sem sugerir que preço determina a ordem.
-- [ ] O Raul aparece no canto inferior direito, tem foco/rotulagem acessíveis e não bloqueia a tela em mobile.
-- [ ] O relatório identifica origem dos dados, separa observado/projetado/estimado e destaca cuidados relevantes para um agrônomo.
-- [ ] `npm run build`, `npm run lint` e `mvn test` passam.
+- [x] É possível escolher um intervalo inclusivo e visualizar início, fim e quantidade de anos.
+- [x] O intervalo de um ano apresenta resultado equivalente ao detalhe atual.
+- [x] Intervalos de vários anos exibem contagens, médias, extremos e acumulados coerentes.
+- [x] O usuário consegue acessar o detalhe de qualquer ano do intervalo.
+- [x] O detalhe anual não apresenta informação aninhada de modo que impeça a leitura independente.
+- [x] Rotação e planejamento estão na mesma jornada e a recomendação prioriza cultura, período e motivo.
+- [x] O ranking mostra posição, aptidão, risco e ações sem sugerir que preço determina a ordem.
+- [x] O Raul aparece no canto inferior direito, tem foco/rotulagem acessíveis e não bloqueia a tela em mobile.
+- [x] O relatório identifica origem dos dados, separa observado/projetado/estimado e destaca cuidados relevantes para um agrônomo.
+- [x] `npm run build`, `npm run lint` e `mvn test` passam (e `npm test`, novo, para as funções de intervalo).
 
 ## 8. Estratégia de implementação
 
@@ -243,10 +243,20 @@ O componente de relatório deve receber dados já calculados pelo frontend ou um
 - Integrar SMAP, MODIS, Landsat, ZARC, CONAB ou IBGE nesta entrega.
 - Alterar a regra agronômica de aptidão sem uma decisão específica e dados de validação.
 
-## 10. Decisões pendentes antes da implementação
+## 10. Decisões adotadas na implementação
 
-1. O intervalo padrão deve ser todo o período disponível ou começar no ano atual?
-2. O agregado deve incluir anos futuros por padrão ou exigir um controle explícito?
-3. Na comparação, o ranking deve ordenar por anos bons, nota média ou uma métrica composta?
-4. O relatório deve ser principalmente para o agricultor ou para apresentação técnica a um agrônomo?
+Estavam pendentes; valem até decisão em contrário.
+
+1. **Intervalo padrão:** só o último ano completo (como pede o RF-01), para a tela abrir igual a antes.
+2. **Anos futuros no agregado:** entram só se o usuário arrastar o marcador até eles. O atalho "só o que já aconteceu" fica ao lado de "todo o período", e o resumo avisa quando mistura observado e previsão.
+3. **Ordem do ranking:** continua a que a API devolve (aptidão no histórico). O frontend não reordena.
+4. **Público do relatório:** o agricultor, em linguagem simples, mas na ordem e com os selos de origem que um agrônomo espera. O quadro do Raul sobre rotação foi mantido.
+
+## 11. Notas de implementação
+
+- Agregação em `frontend/src/intervalo.ts`, testada em `frontend/testes/intervalo.test.ts` com o executor de testes do próprio Node (`npm test`), sem dependência nova.
+- A barra usa dois controles nativos sobrepostos: teclado e leitor de tela funcionam como em qualquer controle deslizante.
+- Rotação e planejamento continuam com duas chamadas à API (`/api/estrategias` e `/api/planejamentos`); só a tela foi unida. "Planejar esta rotação" abre o plano com a primeira cultura da rotação recomendada, mas a sequência do plano segue a regra do `PlanejamentoService`, que pode diferir da estratégia.
+- Com o Raul aberto no desktop, o menu encolhe e ganha rolagem para nada ficar por baixo do chat.
+- O desempenho histórico do relatório só aparece por cultura quando a cultura do plano é uma das duas já simuladas; o clima aparece sempre.
 
