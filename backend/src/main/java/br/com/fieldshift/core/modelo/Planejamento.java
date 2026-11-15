@@ -16,5 +16,7 @@ public record Planejamento(
         Long saldoTotal,
         int anosDeRisco,
         String resumo,
-        List<String> avisos) {
+        List<String> avisos,
+        /** Linha do tempo da rotação: 3 épocas por ano (jan–abr, mai–ago, set–dez). */
+        List<Janela> janelas) {
 }

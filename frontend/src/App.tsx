@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { api } from './api'
-import type { Cultura, ItemRanking, Ponto, Simulacao, SoloEstimado } from './tipos'
+import type { Cultura, Horizonte, ItemRanking, Planejamento, Ponto, Simulacao, SoloEstimado } from './tipos'
 import { NOME_SOLO } from './tipos'
 import { MapaTerreno } from './components/MapaTerreno'
 import { Seletores } from './components/Seletores'
@@ -13,7 +13,8 @@ import { CenarioClima } from './components/CenarioClima'
 import { PlanoPlantio } from './components/PlanoPlantio'
 import { Rotacoes } from './components/Rotacoes'
 import { ChatAgente } from './components/ChatAgente'
-import type { Mensagem } from './components/ChatAgente'
+import type { Mensagem, PedidoGuia } from './components/ChatAgente'
+import { RelatorioRotacao } from './components/RelatorioRotacao'
 import logo from './assets/logo-ciclus.png'
 import tatuPlantando from './assets/tatu-plantando.png'
 import tatuDormindo from './assets/tatu-dormindo.png'
@@ -27,7 +28,7 @@ interface Resultado {
 
 type Aba = 'anos' | 'rotacao' | 'plantar' | 'plano'
 
-/** As quatro visões do resultado, escolhidas no menu da esquerda. */
+/** As quatro visões do resultado, escolhidas no menu da direita. */
 const VISOES: { id: Aba; nome: string; icone: string }[] = [
   { id: 'anos', nome: 'Ano a ano', icone: 'M7 3v3M17 3v3M4 9h16M5 6h14a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1z' },
   { id: 'rotacao', nome: 'Rotação de culturas', icone: 'M20 12a8 8 0 1 1-2.34-5.66M20 4v4h-4' },
@@ -59,6 +60,11 @@ export default function App() {
   const [soloEstimado, setSoloEstimado] = useState<SoloEstimado | null>(null)
   const [painelAberto, setPainelAberto] = useState(true)
   const [painelGrande, setPainelGrande] = useState(false)
+  const [horizonte, setHorizonte] = useState<Horizonte>(3)
+  const [chatAberto, setChatAberto] = useState(false)
+  const [pedidoGuia, setPedidoGuia] = useState<PedidoGuia | null>(null)
+  const [relatorio, setRelatorio] = useState<{ plano: Planejamento; feitoEm: string } | null>(null)
+  const [imprimindo, setImprimindo] = useState(false)
   const hectares = lerHectares(respostas.hectares)
   const pedido = useRef(0)
 
@@ -105,7 +111,6 @@ export default function App() {
         if (meu !== pedido.current) return
         setResultado({ plantada, alternativa, ranking })
         setAno((atual) => (plantada.anos.some((a) => a.ano === atual) ? atual : plantada.anoAtual))
-        setMensagens([])
       })
       .catch((e: Error) => meu === pedido.current && setErro(e.message))
       .finally(() => meu === pedido.current && setCarregando(false))
@@ -124,6 +129,36 @@ export default function App() {
       .finally(() => setPensando(false))
   }
 
+  // O relatório só existe na folha impressa: monta, espera as figuras carregarem e chama a impressão.
+  useEffect(() => {
+    if (!relatorio) return
+    let cancelado = false
+    const figuras = Array.from(document.querySelectorAll<HTMLImageElement>('.relatorio img'))
+    Promise.all(figuras.map((f) => f.decode().catch(() => undefined))).then(() => !cancelado && window.print())
+    return () => {
+      cancelado = true
+    }
+  }, [relatorio])
+
+  /** Imprime o plano que já está na tela ou, vindo do Raul, busca o plano da cultura plantada. */
+  function imprimirRelatorio(pronto?: Planejamento) {
+    if (!ponto) return
+    setImprimindo(true)
+    const plano = pronto
+      ? Promise.resolve(pronto)
+      : api.planejar(ponto, respostas.solo, hectares, culturaPlanoId || respostas.culturaPlantadaId, horizonte)
+    plano
+      .then((p) => setRelatorio({ plano: p, feitoEm: new Date().toLocaleDateString('pt-BR') }))
+      .catch((e: Error) => setMensagens((m) => [...m, { autor: 'agente', texto: `Não consegui montar o relatório: ${e.message}` }]))
+      .finally(() => setImprimindo(false))
+  }
+
+  /** Abre a conversa com o Raul; sem resultado (ou a pedido), ele começa a fazer as perguntas. */
+  function abrirChat(guiar: boolean, voz = false) {
+    setChatAberto(true)
+    if (guiar || !resultado) setPedidoGuia({ vez: Date.now(), voz })
+  }
+
   function compararCom(culturaId: string) {
     if (culturaId === respostas.culturaPlantadaId) return
     setRespostas({ ...respostas, culturaTesteId: culturaId })
@@ -138,7 +173,7 @@ export default function App() {
   }
 
   const anos = resultado?.plantada.anos ?? []
-  // O painel da direita aparece sempre: com o guia no começo, depois com o resultado ou o erro.
+  // O painel da esquerda aparece sempre: com o guia no começo, depois com o resultado ou o erro.
   const temPainel = true
   const sugestoes = resultado
     ? [
@@ -156,9 +191,19 @@ export default function App() {
 
       <aside className="menu" aria-label="Seu terreno">
         <div className="menu__marca">
-          <h1 className="topo__logo">
-            <img src={logo} alt="Ciclus" width="120" height="36" />
-          </h1>
+          <div className="menu__topo">
+            <h1 className="topo__logo">
+              <img src={logo} alt="Ciclus" width="120" height="36" />
+            </h1>
+            <button type="button" className="assistente-botao" onClick={() => abrirChat(true, true)}
+              title="O Raul faz as perguntas em voz alta e monta o seu relatório">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4"
+                strokeLinecap="round" aria-hidden="true">
+                <path d="M4 10v4M8 6v12M12 3v18M16 7v10M20 10v4" />
+              </svg>
+              Assistente
+            </button>
+          </div>
           <p>Qual rotação de culturas protege a sua terra e a sua renda?</p>
         </div>
 
@@ -296,7 +341,7 @@ export default function App() {
                     <span className="passo__numero" aria-hidden="true">1</span>
                     <div>
                       <b>Escolha o que você planta</b>
-                      <span>No menu verde, do lado esquerdo.</span>
+                      <span>No menu verde, do lado direito.</span>
                     </div>
                   </li>
                   <li className={ponto ? 'passo passo--feito' : 'passo'}>
@@ -314,6 +359,9 @@ export default function App() {
                     </div>
                   </li>
                 </ol>
+                <button type="button" className="botao-claro guia__raul" onClick={() => abrirChat(true)}>
+                  Prefere conversar? O Raul pergunta e monta tudo
+                </button>
                 <p className="guia__fim">
                   Aí você vê se cada ano foi <b className="cor-bom">bom</b>, de <b className="cor-atencao">atenção</b>{' '}
                   ou <b className="cor-ruim">ruim</b> para a sua planta.
@@ -370,20 +418,48 @@ export default function App() {
                 culturas={culturas}
                 culturaId={culturaPlanoId || respostas.culturaPlantadaId}
                 aoEscolherCultura={setCulturaPlanoId}
+                horizonte={horizonte}
+                aoMudarHorizonte={setHorizonte}
+                aoImprimir={imprimirRelatorio}
+                imprimindo={imprimindo}
               />
             )}
           </div>
         </section>
       )}
 
-      {resultado && (
-        <ChatAgente
-          mensagens={mensagens}
-          carregando={pensando}
-          demonstracao={demonstracao}
-          sugestoes={sugestoes}
-          aoPerguntar={perguntar}
-        />
+      <ChatAgente
+        aberto={chatAberto}
+        aoAbrir={() => abrirChat(false)}
+        aoFechar={() => setChatAberto(false)}
+        pedidoGuia={pedidoGuia}
+        mensagens={mensagens}
+        aoDizer={(m) => setMensagens((lista) => [...lista, m])}
+        carregando={pensando}
+        demonstracao={demonstracao}
+        sugestoes={sugestoes}
+        aoPerguntar={perguntar}
+        culturas={culturas}
+        respostas={respostas}
+        aoMudar={setRespostas}
+        ponto={ponto}
+        soloEstimado={soloEstimado}
+        aoMudarHorizonte={setHorizonte}
+        temResultado={!!resultado}
+        calculando={carregando}
+        erro={erro}
+        aoCalcular={() => {
+          setAtivo(true)
+          setCulturaPlanoId('')
+          setAba('plano')
+          setPainelAberto(true)
+        }}
+        aoImprimir={() => imprimirRelatorio()}
+        imprimindo={imprimindo}
+      />
+
+      {relatorio && ponto && (
+        <RelatorioRotacao plano={relatorio.plano} feitoEm={relatorio.feitoEm} ponto={ponto} solo={respostas.solo} soloEstimado={soloEstimado} />
       )}
     </div>
   )

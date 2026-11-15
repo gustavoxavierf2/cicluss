@@ -59,6 +59,53 @@ export interface Trimestre {
   nome: string
   chuva: number
   temperaturaMedia: number
+  umidadeSolo: number | null
+}
+
+export type Fase = 'SAFRA' | 'SAFRINHA' | 'ENTRESSAFRA'
+
+/** Uma época (4 meses) da linha do tempo da rotação. */
+export interface Janela {
+  ano: number
+  inicio: string
+  fim: string
+  fase: Fase
+  plantio: string
+  /** null quando é planta de cobertura. */
+  culturaId: string | null
+  porque: string
+  temperaturaMedia: number
+  /** De 0 (seco) a 1 (encharcado). */
+  umidadeSolo: number
+  chuva: number
+  /** true quando a fonte do clima não separa as épocas do ano. */
+  mediaDoAno: boolean
+}
+
+export const NOME_FASE: Record<Fase, string> = {
+  SAFRA: 'Safra',
+  SAFRINHA: 'Safrinha',
+  ENTRESSAFRA: 'Entressafra',
+}
+
+/** Desenho de cada planta na linha do tempo; cobertura e culturas novas caem no broto. */
+const ICONE_CULTURA: Record<string, string> = {
+  milho: '🌽',
+  feijao: '🫘',
+  'cafe-arabica': '☕',
+  mandioca: '🍠',
+  sorgo: '🌾',
+}
+
+export function iconeDaJanela(j: Janela) {
+  return (j.culturaId && ICONE_CULTURA[j.culturaId]) || '🌱'
+}
+
+/** "Plantar milho", "Semear braquiária…" (cobertura) ou "Manter mandioca" (segue da época anterior). */
+export function acaoDaJanela(janelas: Janela[], i: number) {
+  const j = janelas[i]
+  if (!j.culturaId) return `Semear ${j.plantio}`
+  return i > 0 && janelas[i - 1].culturaId === j.culturaId ? `Manter ${j.plantio}` : `Plantar ${j.plantio}`
 }
 
 export interface IndicadorSolo {
@@ -152,7 +199,11 @@ export interface Planejamento {
   anosDeRisco: number
   resumo: string
   avisos: string[]
+  janelas: Janela[]
 }
+
+export type Horizonte = 1 | 3 | 5
+export const HORIZONTES: Horizonte[] = [1, 3, 5]
 
 export interface ItemRanking {
   cultura: Cultura

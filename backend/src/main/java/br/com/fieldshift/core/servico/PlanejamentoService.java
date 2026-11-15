@@ -1,8 +1,12 @@
 package br.com.fieldshift.core.servico;
 
 import br.com.fieldshift.core.modelo.AnoPlano;
+import br.com.fieldshift.core.modelo.ClimaAnual;
 import br.com.fieldshift.core.modelo.Cultura;
+import br.com.fieldshift.core.modelo.Fase;
 import br.com.fieldshift.core.modelo.GrupoRotacao;
+import br.com.fieldshift.core.modelo.Janela;
+import br.com.fieldshift.core.modelo.Trimestre;
 import br.com.fieldshift.core.modelo.Nivel;
 import br.com.fieldshift.core.modelo.Planejamento;
 import br.com.fieldshift.core.modelo.ResultadoAno;
@@ -29,6 +33,10 @@ import java.util.Optional;
  *    deixa a maior sobra estimada; se nenhuma aguenta, entra a de maior nota.
  * 4. Quando a previsão do ano não é boa, o plano aponta uma cultura reserva (plano B) e o cuidado
  *    contra o risco previsto.
+ * 5. Linha do tempo: cada ano vira 3 épocas de 4 meses. A mais seca é a entressafra (planta de
+ *    cobertura); das outras duas, a mais chuvosa é a safra (a cultura do ano) e a outra é a safrinha
+ *    (cultura de ciclo curto, de grupo diferente da última colheita, se a chuva der). A cobertura da
+ *    entressafra é escolhida para repor o que a última colheita gastou. Cultura de ciclo longo ocupa o ano todo.
  */
 public class PlanejamentoService {
 
@@ -54,7 +62,8 @@ public class PlanejamentoService {
         for (Cultura c : culturas.todas()) {
             simulacoes.put(c.id(), simulador.simular(latitude, longitude, solo, c.id(), area));
         }
-        int primeiroAno = simulacoes.get(principal.id()).anoAtual() + 1;
+        // O ano em curso já está plantado: o plano começa em janeiro do próximo ano do calendário.
+        int primeiroAno = simulacoes.get(principal.id()).anoAtual() + 2;
 
         List<AnoPlano> plano = new ArrayList<>();
         Cultura anterior = null;
@@ -96,7 +105,132 @@ public class PlanejamentoService {
         Long saldoTotal = temValores ? plano.stream().mapToLong(a -> a.safra().saldo()).sum() : null;
         int anosDeRisco = (int) plano.stream().filter(a -> a.resultado().nivel() != Nivel.BOM).count();
         return new Planejamento(principal, area, plano, saldoTotal, anosDeRisco,
-                resumo(plano, saldoTotal), avisos(principal, plano, saldoTotal));
+                resumo(plano, saldoTotal), avisos(principal, plano, saldoTotal), janelas(plano, simulacoes));
+    }
+
+    // ---------- linha do tempo da rotação ----------
+
+    private static final String[] MESES = {"Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"};
+    /** Quantos meses de cada trimestre caem em cada época de 4 meses (jan–abr, mai–ago, set–dez). */
+    private static final int[][] MESES_DO_TRIMESTRE = {{3, 1, 0, 0}, {0, 2, 2, 0}, {0, 0, 1, 3}};
+    /** Sem dado por época, vale o costume da região: chuva no começo e no fim do ano, seca no meio. */
+    private static final Fase[] FASES_PADRAO = {Fase.SAFRA, Fase.ENTRESSAFRA, Fase.SAFRINHA};
+    /** Cultura com ciclo maior que isto (em dias) fica na terra o ano todo. */
+    private static final int CICLO_LONGO = 240;
+    private static final int CICLO_DE_SAFRINHA = 120;
+    /** Com menos chuva que isto (mm em 4 meses) não vale arriscar uma segunda colheita. */
+    private static final double CHUVA_MINIMA_SAFRINHA = 150;
+
+    private List<Janela> janelas(List<AnoPlano> plano, Map<String, Simulacao> simulacoes) {
+        List<Janela> janelas = new ArrayList<>();
+        Cultura ultimaColheita = null;
+        for (int i = 0; i < plano.size(); i++) {
+            AnoPlano a = plano.get(i);
+            ClimaAnual clima = a.resultado().clima();
+            List<Trimestre> trimestres = clima.trimestres();
+            boolean porEpoca = trimestres != null && trimestres.size() == 4;
+            double[] chuva = new double[3], temperatura = new double[3], umidade = new double[3];
+            for (int j = 0; j < 3; j++) {
+                if (!porEpoca) {
+                    chuva[j] = clima.precipitacao() / 3;
+                    temperatura[j] = clima.temperaturaMedia();
+                    umidade[j] = clima.umidadeSolo();
+                    continue;
+                }
+                for (int t = 0; t < 4; t++) {
+                    int meses = MESES_DO_TRIMESTRE[j][t];
+                    Trimestre tri = trimestres.get(t);
+                    chuva[j] += tri.chuva() * meses / 3.0;
+                    temperatura[j] += tri.temperaturaMedia() * meses / 4.0;
+                    umidade[j] += (tri.umidadeSolo() == null ? clima.umidadeSolo() : tri.umidadeSolo()) * meses / 4.0;
+                }
+            }
+            Fase[] fases = porEpoca ? fases(chuva) : FASES_PADRAO;
+            Cultura cultura = a.cultura();
+            String nome = cultura.nome();
+            boolean anoTodo = cultura.grupoRotacao() == GrupoRotacao.PERENE || cultura.cicloDias() > CICLO_LONGO;
+            String sufixo = "/" + String.format(Locale.ROOT, "%02d", a.ano() % 100);
+            for (int j = 0; j < 3; j++) {
+                Fase fase = fases[j];
+                String plantio = nome;
+                String culturaId = cultura.id();
+                String porque;
+                if (anoTodo) {
+                    porque = cultura.grupoRotacao() == GrupoRotacao.PERENE
+                            ? nome + " fica no terreno vários anos. Plante cobertura no meio das linhas para proteger a terra."
+                            : nome + " leva o ano todo para ficar pronta, então segue na terra. Deixe palha no chão para guardar a umidade.";
+                } else if (fase == Fase.SAFRA) {
+                    porque = a.principal()
+                            ? "É a colheita principal do ano, na época que mais chove. É a que mais traz renda."
+                            : "Planta diferente da do ano passado: descansa a terra, corta o ciclo das pragas e ainda traz renda.";
+                } else {
+                    // A safrinha fica entre duas colheitas: não repete o grupo da anterior e, se der, nem o da próxima.
+                    boolean safraAindaVem = List.of(fases).subList(j, 3).contains(Fase.SAFRA);
+                    Cultura proxima = safraAindaVem ? cultura : i + 1 < plano.size() ? plano.get(i + 1).cultura() : null;
+                    Optional<Cultura> segunda = fase == Fase.SAFRINHA && (!porEpoca || chuva[j] >= CHUVA_MINIMA_SAFRINHA)
+                            ? culturaDeSafrinha(ultimaColheita == null ? cultura : ultimaColheita, proxima, simulacoes, a.ano())
+                            : Optional.empty();
+                    if (segunda.isPresent()) {
+                        plantio = segunda.get().nome();
+                        culturaId = segunda.get().id();
+                        porque = segunda.get().grupoRotacao() == GrupoRotacao.LEGUMINOSA
+                                ? "Segunda colheita do ano. Essa planta devolve nitrogênio (adubo natural) para a terra e traz uma renda a mais."
+                                : "Segunda colheita do ano, com uma planta de outro tipo: aproveita o resto da chuva, deixa palha na terra e traz uma renda a mais.";
+                    } else {
+                        boolean gastaNitrogenio = (ultimaColheita == null ? cultura : ultimaColheita).grupoRotacao() == GrupoRotacao.GRAMINEA;
+                        plantio = gastaNitrogenio ? "Crotalária + milheto (cobertura)" : "Braquiária + milheto (cobertura)";
+                        culturaId = null;
+                        porque = fase == Fase.SAFRINHA
+                                ? "Chove pouco para uma segunda colheita. Melhor a terra coberta do que pelada: a palha guarda a umidade e evita a erosão."
+                                : "Época seca. Não é para colher: é para proteger a terra da erosão, guardar a umidade e quebrar o ciclo das pragas"
+                                        + (gastaNitrogenio ? ". A crotalária ainda repõe o adubo que a última colheita gastou." : " até a próxima safra.");
+                    }
+                }
+                if (culturaId != null) {
+                    ultimaColheita = culturas.obter(culturaId);
+                }
+                janelas.add(new Janela(a.ano(), MESES[j * 4] + sufixo, MESES[j * 4 + 3] + sufixo, fase, plantio, culturaId,
+                        porque, arredondar(temperatura[j], 1), arredondar(umidade[j], 2), Math.round(chuva[j]), !porEpoca));
+            }
+        }
+        return janelas;
+    }
+
+    /** A época mais seca é a entressafra; das outras duas, a mais chuvosa é a safra. */
+    private static Fase[] fases(double[] chuva) {
+        int seca = 0, chuvosa = 0;
+        for (int j = 1; j < 3; j++) {
+            if (chuva[j] < chuva[seca]) seca = j;
+            if (chuva[j] > chuva[chuvosa]) chuvosa = j;
+        }
+        if (seca == chuvosa) {
+            return FASES_PADRAO;
+        }
+        Fase[] fases = {Fase.SAFRINHA, Fase.SAFRINHA, Fase.SAFRINHA};
+        fases[seca] = Fase.ENTRESSAFRA;
+        fases[chuvosa] = Fase.SAFRA;
+        return fases;
+    }
+
+    /**
+     * Cultura de ciclo curto para a safrinha: nunca do grupo da colheita anterior; de preferência também
+     * diferente da próxima (no grupo ou, pelo menos, na planta), depois leguminosa (repõe nitrogênio) e, por fim, a de maior nota no ano.
+     */
+    private Optional<Cultura> culturaDeSafrinha(Cultura anterior, Cultura proxima, Map<String, Simulacao> simulacoes, int ano) {
+        Comparator<Cultura> diferenteDaProxima = Comparator.comparing(c -> proxima == null || !mesmoGrupo(c, proxima));
+        Comparator<Cultura> outraPlanta = Comparator.comparing(c -> proxima == null || !c.id().equals(proxima.id()));
+        Comparator<Cultura> leguminosa = Comparator.comparing(c -> c.grupoRotacao() == GrupoRotacao.LEGUMINOSA);
+        return culturas.todas().stream()
+                .filter(c -> c.grupoRotacao() != GrupoRotacao.PERENE && c.cicloDias() <= CICLO_DE_SAFRINHA)
+                .filter(c -> !mesmoGrupo(c, anterior))
+                .filter(c -> noAno(simulacoes.get(c.id()), ano).nivel() != Nivel.RUIM)
+                .max(diferenteDaProxima.thenComparing(outraPlanta).thenComparing(leguminosa)
+                        .thenComparingInt(c -> noAno(simulacoes.get(c.id()), ano).nota()));
+    }
+
+    private static double arredondar(double v, int casas) {
+        double f = Math.pow(10, casas);
+        return Math.round(v * f) / f;
     }
 
     /** Melhor cultura de outro grupo para o ano: aguenta o clima previsto e deixa a maior sobra. */

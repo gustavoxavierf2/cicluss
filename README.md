@@ -12,7 +12,7 @@ Projeto da equipe para o desafio *Field Shift: Adapting Farms with NASA Data* (N
 backend/   API em Java 21 + Spring Boot 3.5 (porta 8080)
 rodar.ps1 / rodar.sh   sobem tudo com um comando
 frontend/  Site em React + TypeScript + Vite + Leaflet (porta 5173)
-docs/      Contrato de dados para o pessoal dos dados
+docs/      Contratos, resumos e especificação de melhorias do produto
 ```
 
 ## Como rodar
@@ -148,7 +148,9 @@ Ainda não implementado (entra na arquitetura como próximo passo):
 - **Hectares e safra:** com a área informada (`hectares`), cada ano da simulação traz safra, venda, custo e sobra estimados. A conta é simples: colheita de um ano bom × nota do ano (0 a 100) × hectares. Serve para dar ideia de grandeza; **não é** produtividade calibrada (tipo DSSAT).
 - **Valores de exemplo:** produtividade, preço e custo ficam em `culturas.json` (campo `economia`) e hoje são **valores de exemplo**. Trocar por CONAB/IBGE antes de mostrar como real.
 - **Cenário:** o agricultor ajusta temperatura, chuva e umidade da terra de um ano e vê a nota e a safra com esse clima. A regra da nota é a mesma (`AptidaoCalculadora`).
-- **Planejamento:** a partir da cultura que o agricultor decidiu plantar, monta 1, 3 ou 5 anos. Regras em `core/servico/PlanejamentoService`: a escolhida entra no 1º ano e volta sempre que a rotação deixa; não se repete o mesmo grupo (`grupoRotacao`) em anos seguidos; no ano de rotação entra, entre as culturas que aguentam o clima previsto, a de maior sobra estimada; ano com previsão ruim ganha plano B e o cuidado contra o risco.
+- **Planejamento:** a partir da cultura que o agricultor decidiu plantar, monta 1, 3 ou 5 anos. Regras em `core/servico/PlanejamentoService`: a escolhida entra no 1º ano e volta sempre que a rotação deixa; não se repete o mesmo grupo (`grupoRotacao`) em anos seguidos; no ano de rotação entra, entre as culturas que aguentam o clima previsto, a de maior sobra estimada; ano com previsão ruim ganha plano B e o cuidado contra o risco. O plano começa em janeiro do próximo ano do calendário.
+- **Linha do tempo da rotação:** o planejamento devolve também `janelas`, 3 épocas por ano (jan–abr, mai–ago, set–dez), cada uma com temperatura e umidade do solo médias da época. A época mais seca é a entressafra (planta de cobertura); das outras duas, a mais chuvosa é a safra (a cultura do ano) e a outra é a safrinha (cultura de até 120 dias, de grupo diferente da colheita anterior, se chover pelo menos 150 mm). Cultura de ciclo longo ou perene ocupa o ano todo. Braquiária, crotalária e milheto são recomendação fixa de cobertura, não entram na tabela de culturas nem na conta do dinheiro.
+- **Assistente (Raul) e relatório:** o chat faz as mesmas perguntas do menu, uma por vez (com voz, onde o navegador tiver), e termina em "Imprimir Relatório de Rotação de Culturas". O relatório é uma folha de impressão do próprio site (`RelatorioRotacao.tsx`), sem geração de PDF no backend: o PDF sai pelo "Salvar como PDF" do navegador.
 
 ## Como o backend está organizado
 
@@ -166,6 +168,9 @@ Ainda não implementado (entra na arquitetura como próximo passo):
 - `config/` — liga as peças. Trocar a fonte de clima: `fieldshift.clima.fonte` em `application.properties`.
 
 ## Próximos passos
+
+As melhorias de experiência e organização do painel estão especificadas em
+[docs/sdd-melhorias-produto.md](docs/sdd-melhorias-produto.md).
 
 - [x] Clima real da NASA POWER.
 - [ ] Previsão dos anos futuros com modelo climático (hoje é a tendência do histórico).

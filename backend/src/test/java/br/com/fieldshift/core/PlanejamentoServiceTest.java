@@ -6,6 +6,8 @@ import br.com.fieldshift.core.modelo.Cenario;
 import br.com.fieldshift.core.modelo.Cultura;
 import br.com.fieldshift.core.modelo.Economia;
 import br.com.fieldshift.core.modelo.Faixa;
+import br.com.fieldshift.core.modelo.Fase;
+import br.com.fieldshift.core.modelo.Janela;
 import br.com.fieldshift.core.modelo.GrupoRotacao;
 import br.com.fieldshift.core.modelo.Nivel;
 import br.com.fieldshift.core.modelo.Planejamento;
@@ -116,7 +118,7 @@ class PlanejamentoServiceTest {
     @Test
     void planoComecaNoAnoSeguinteComACulturaEscolhida() {
         Planejamento p = planejar("milho", 3);
-        assertThat(p.anos()).extracting(AnoPlano::ano).containsExactly(2026, 2027, 2028);
+        assertThat(p.anos()).extracting(AnoPlano::ano).containsExactly(2027, 2028, 2029);
         assertThat(p.anos().get(0).cultura().id()).isEqualTo("milho");
         assertThat(p.anos().get(0).principal()).isTrue();
     }
@@ -162,6 +164,50 @@ class PlanejamentoServiceTest {
     void soAceita1ou3ou5Anos() {
         assertThatThrownBy(() -> planejar("milho", 2)).isInstanceOf(IllegalArgumentException.class);
         assertThat(planejar("milho", 1).anos()).hasSize(1);
+    }
+
+    // ---------- linha do tempo da rotação ----------
+
+    @Test
+    void linhaDoTempoTemTresEpocasPorAno() {
+        Planejamento p = planejar("milho", 3);
+        assertThat(p.janelas()).hasSize(9);
+        int primeiro = p.anos().get(0).ano() % 100;
+        assertThat(p.janelas().get(0).inicio()).isEqualTo("Jan/" + primeiro);
+        assertThat(p.janelas().get(0).fim()).isEqualTo("Abr/" + primeiro);
+        assertThat(p.janelas().get(2).fim()).isEqualTo("Dez/" + primeiro);
+    }
+
+    @Test
+    void cadaAnoTemSafraSafrinhaDeOutroGrupoEEntressafraCoberta() {
+        // O clima de demonstração não separa as épocas: vale a ordem padrão safra, entressafra, safrinha.
+        List<Janela> ano = planejar("milho", 1).janelas();
+        assertThat(ano).extracting(Janela::fase).containsExactly(Fase.SAFRA, Fase.ENTRESSAFRA, Fase.SAFRINHA);
+        assertThat(ano).allMatch(Janela::mediaDoAno);
+        assertThat(ano.get(0).culturaId()).isEqualTo("milho");
+        assertThat(ano.get(1).culturaId()).isNull();
+        assertThat(ano.get(1).plantio()).contains("cobertura");
+        assertThat(ano.get(1).porque()).contains("erosão");
+        assertThat(ano.get(2).culturaId()).isEqualTo("feijao");   // leguminosa depois da gramínea
+        assertThat(ano).allMatch(j -> j.temperaturaMedia() > 0 && j.umidadeSolo() > 0);
+    }
+
+    @Test
+    void safrinhaNuncaRepeteOGrupoDaColheitaAnterior() {
+        Janela anterior = null;
+        for (Janela j : planejar("milho", 5).janelas()) {
+            if (j.culturaId() == null) continue;
+            if (anterior != null && j.fase() == Fase.SAFRINHA) {
+                assertThat(culturas.obter(j.culturaId()).grupoRotacao())
+                        .isNotEqualTo(culturas.obter(anterior.culturaId()).grupoRotacao());
+            }
+            anterior = j;
+        }
+    }
+
+    @Test
+    void culturaPereneOcupaOAnoTodoNaLinhaDoTempo() {
+        assertThat(planejar("cafe", 1).janelas()).allMatch(j -> "cafe".equals(j.culturaId()));
     }
 
     @Test

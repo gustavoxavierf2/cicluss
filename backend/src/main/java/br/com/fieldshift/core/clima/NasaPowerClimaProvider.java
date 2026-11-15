@@ -91,12 +91,13 @@ public class NasaPowerClimaProvider implements ClimaProvider {
             } else {
                 double chuvaDoAno = Math.round(Math.max(0, chuva.em(ano)));
                 double temperaturaDoAno = arredondar(temperatura.em(ano), 1);
+                double umidadeDoAno = arredondar(Math.max(0, Math.min(1, umidade.em(ano))), 2);
                 serie.add(new ClimaAnual(ano, true,
                         temperaturaDoAno, arredondar(maxima.em(ano), 1), arredondar(minima.em(ano), 1),
                         chuvaDoAno,
-                        arredondar(Math.max(0, Math.min(1, umidade.em(ano))), 2),
+                        umidadeDoAno,
                         Math.round(Math.max(0, evapotranspiracao.em(ano))),
-                        trimestresTipicos(historico, chuvaDoAno, temperaturaDoAno)));
+                        trimestresTipicos(historico, chuvaDoAno, temperaturaDoAno, umidadeDoAno)));
             }
         }
         return serie;
@@ -138,18 +139,23 @@ public class NasaPowerClimaProvider implements ClimaProvider {
     private static List<Trimestre> trimestres(JsonNode parametros, int ano) {
         List<Trimestre> lista = new ArrayList<>();
         for (int t = 0; t < 4; t++) {
-            double chuva = 0, temperatura = 0;
+            double chuva = 0, temperatura = 0, umidade = 0;
+            boolean temUmidade = true;
             for (int mes = t * 3 + 1; mes <= t * 3 + 3; mes++) {
                 String chave = String.format(Locale.ROOT, "%d%02d", ano, mes);
                 double c = parametros.path("PRECTOTCORR_SUM").path(chave).asDouble(SEM_DADO);
                 double temp = parametros.path("T2M").path(chave).asDouble(SEM_DADO);
+                double u = parametros.path("GWETROOT").path(chave).asDouble(SEM_DADO);
                 if (c == SEM_DADO || temp == SEM_DADO) {
                     return null;
                 }
                 chuva += c;
                 temperatura += temp;
+                umidade += u;
+                temUmidade &= u != SEM_DADO;
             }
-            lista.add(new Trimestre(Trimestre.NOMES.get(t), Math.round(chuva), arredondar(temperatura / 3, 1)));
+            lista.add(new Trimestre(Trimestre.NOMES.get(t), Math.round(chuva), arredondar(temperatura / 3, 1),
+                    temUmidade ? arredondar(umidade / 3, 2) : null));
         }
         return List.copyOf(lista);
     }
@@ -158,7 +164,8 @@ public class NasaPowerClimaProvider implements ClimaProvider {
      * Trimestres de um ano futuro: a chuva do ano repartida como costuma ser no histórico, e a
      * temperatura do ano somada à diferença típica de cada trimestre.
      */
-    static List<Trimestre> trimestresTipicos(List<ClimaAnual> historico, double chuvaDoAno, double temperaturaDoAno) {
+    static List<Trimestre> trimestresTipicos(List<ClimaAnual> historico, double chuvaDoAno, double temperaturaDoAno,
+                                             double umidadeDoAno) {
         List<ClimaAnual> comTrimestres = historico.stream().filter(c -> c.trimestres() != null).toList();
         if (comTrimestres.isEmpty()) {
             return null;
@@ -172,8 +179,14 @@ public class NasaPowerClimaProvider implements ClimaProvider {
             double diferenca = comTrimestres.stream()
                     .mapToDouble(c -> c.trimestres().get(i).temperaturaMedia() - c.temperaturaMedia())
                     .average().orElse(0);
+            // Umidade do solo: a do ano somada à diferença típica do trimestre (seca no meio do ano, por exemplo).
+            boolean temUmidade = comTrimestres.stream().allMatch(c -> c.trimestres().get(i).umidadeSolo() != null);
+            double diferencaUmidade = !temUmidade ? 0 : comTrimestres.stream()
+                    .mapToDouble(c -> c.trimestres().get(i).umidadeSolo() - c.umidadeSolo())
+                    .average().orElse(0);
             lista.add(new Trimestre(Trimestre.NOMES.get(t), Math.round(chuvaDoAno * parte),
-                    arredondar(temperaturaDoAno + diferenca, 1)));
+                    arredondar(temperaturaDoAno + diferenca, 1),
+                    temUmidade ? arredondar(Math.max(0, Math.min(1, umidadeDoAno + diferencaUmidade)), 2) : null));
         }
         return List.copyOf(lista);
     }

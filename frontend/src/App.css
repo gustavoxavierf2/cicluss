@@ -1341,29 +1341,24 @@
   border-radius: 0;
 }
 
-/* Controles do mapa ficam ao lado do painel da direita, não embaixo dele. */
+/* Controles do mapa ficam ao lado do menu da direita, não embaixo dele. */
+.app--mapa .leaflet-top.leaflet-right,
+.app--mapa .leaflet-bottom.leaflet-right {
+  right: calc(var(--largura-menu) + 2 * var(--margem));
+}
+
 .app--mapa .leaflet-top.leaflet-right {
   top: var(--margem);
-  right: var(--margem);
-  transition: right 0.2s;
 }
 
-.app--painel .leaflet-top.leaflet-right {
-  right: calc(var(--largura-painel) + 2 * var(--margem));
-}
-
-.app--painel .leaflet-bottom.leaflet-right {
-  right: calc(var(--largura-painel) + 2 * var(--margem));
-}
-
-/* ---------- menu da esquerda ---------- */
+/* ---------- menu da direita: as perguntas ---------- */
 .menu {
   position: fixed;
   z-index: 1050;
   top: var(--margem);
-  left: var(--margem);
+  right: var(--margem);
   width: var(--largura-menu);
-  max-height: calc(100vh - 2 * var(--margem) - 62px);
+  max-height: calc(100vh - 2 * var(--margem));
   overflow-y: auto;
   display: flex;
   flex-direction: column;
@@ -1380,7 +1375,32 @@
   display: flex;
   flex-direction: column;
   gap: 8px;
-  align-items: flex-start;
+}
+
+.menu__topo {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+/* Botão do assistente ao lado da logo: abre a conversa falada com o Raul. */
+.assistente-botao {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  border: 0;
+  border-radius: 999px;
+  background: var(--amarelo-dourado);
+  color: var(--texto);
+  font: inherit;
+  font-weight: 700;
+  padding: 9px 16px 9px 12px;
+  cursor: pointer;
+}
+
+.assistente-botao:hover {
+  filter: brightness(1.08);
 }
 
 .menu__marca p {
@@ -1536,13 +1556,13 @@
   color: var(--areia-clara);
 }
 
-/* ---------- painel da direita ---------- */
+/* ---------- painel da esquerda: o resultado (embaixo dele fica o botão do Raul) ---------- */
 .app--mapa .painel {
   position: fixed;
   z-index: 1050;
   top: var(--margem);
-  right: var(--margem);
-  bottom: var(--margem);
+  left: var(--margem);
+  bottom: calc(var(--margem) + 84px);
   width: var(--largura-painel);
   display: flex;
   flex-direction: column;
@@ -1585,7 +1605,7 @@
   position: fixed;
   z-index: 1050;
   top: var(--margem);
-  right: var(--margem);
+  left: var(--margem);
   border: 0;
   border-radius: 999px;
   padding: 11px 18px;
@@ -1597,7 +1617,8 @@
   box-shadow: var(--sombra-flutuante);
 }
 
-.app--mapa:not(.app--painel) .leaflet-top.leaflet-right {
+/* Com o painel fechado, o controle da chuva desce para não ficar sob o botão "Abrir resultado". */
+.app--mapa:not(.app--painel) .chuva-controle {
   top: calc(var(--margem) + 52px);
 }
 
@@ -1607,15 +1628,15 @@
   position: fixed;
   z-index: 1050;
   bottom: var(--margem);
-  left: calc(var(--largura-menu) + 2 * var(--margem));
-  right: var(--margem);
+  left: var(--margem);
+  right: calc(var(--largura-menu) + 2 * var(--margem));
   margin: 0 auto;
   box-shadow: var(--sombra-flutuante);
 }
 
 .app--painel .tempo,
 .app--painel .dica {
-  right: calc(var(--largura-painel) + 2 * var(--margem));
+  left: calc(var(--largura-painel) + 2 * var(--margem));
 }
 
 .tempo {
@@ -1637,7 +1658,7 @@
   text-align: center;
 }
 
-/* ---------- chat: embaixo à esquerda, sob o menu ---------- */
+/* ---------- chat: embaixo à esquerda, sob o painel ---------- */
 .app--mapa .chat-botao,
 .app--mapa .chat {
   left: var(--margem);
@@ -1678,7 +1699,7 @@
   position: fixed;
   z-index: 1050;
   top: var(--margem);
-  left: calc(var(--largura-menu) + 2 * var(--margem));
+  left: var(--margem);
   display: flex;
   align-items: center;
   gap: 10px;
@@ -1689,6 +1710,10 @@
   color: var(--areia-clara);
   box-shadow: var(--sombra-flutuante);
   font-size: 0.82rem;
+}
+
+.app--painel .chuva-controle {
+  left: calc(var(--largura-painel) + 2 * var(--margem));
 }
 
 .chuva-controle__texto {
@@ -1755,7 +1780,9 @@
 
 /* ---------- telas estreitas: mapa em cima e o resto empilhado ---------- */
 @media (max-width: 1100px) {
-  .chuva-controle {
+  .chuva-controle,
+  .app--painel .chuva-controle,
+  .app--mapa:not(.app--painel) .chuva-controle {
     position: absolute;
     top: auto;
     left: 10px;
@@ -1791,13 +1818,12 @@
   }
 
   .app--mapa .leaflet-top.leaflet-right,
-  .app--painel .leaflet-top.leaflet-right,
-  .app--mapa:not(.app--painel) .leaflet-top.leaflet-right {
+  .app--painel .leaflet-top.leaflet-right {
     top: 0;
     right: 0;
   }
 
-  .app--painel .leaflet-bottom.leaflet-right {
+  .app--mapa .leaflet-bottom.leaflet-right {
     right: 0;
   }
 
@@ -2417,4 +2443,570 @@
 .plano__avisos ul {
   font-size: 1rem;
   gap: 8px;
+}
+
+/* =====================================================================
+   Raul, o assistente: botão convidativo, perguntas guiadas e voz.
+   ===================================================================== */
+.chat-botao {
+  gap: 12px;
+  padding: 6px 22px 6px 8px;
+  text-align: left;
+  line-height: 1.2;
+  font-weight: 400;
+}
+
+.chat-botao img {
+  width: 64px;
+  height: 60px;
+  object-fit: contain;
+  padding: 4px;
+  border-radius: 50%;
+  background: var(--areia-clara);
+  animation: aceno 3.2s ease-in-out infinite;
+}
+
+.chat-botao b {
+  display: block;
+  font-size: 1.05rem;
+}
+
+.chat-botao small {
+  opacity: 0.85;
+}
+
+.chat-botao:hover img {
+  animation-duration: 0.9s;
+}
+
+@keyframes aceno {
+  0%,
+  70%,
+  100% {
+    transform: rotate(0);
+  }
+  78% {
+    transform: rotate(-9deg);
+  }
+  88% {
+    transform: rotate(7deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .chat-botao img {
+    animation: none;
+  }
+}
+
+.chat__rosto {
+  width: 44px;
+  height: auto;
+}
+
+.chat__voz {
+  border: 0;
+  background: none;
+  font-size: 1.2rem;
+  cursor: pointer;
+}
+
+.chat__microfone {
+  flex-shrink: 0;
+  width: 42px;
+  display: grid;
+  place-items: center;
+  border: 1px solid var(--borda-forte);
+  border-radius: 8px;
+  background: var(--campo);
+  color: var(--verde-escuro);
+  cursor: pointer;
+}
+
+.chat__microfone--ouvindo {
+  background: var(--terracota-escura);
+  border-color: var(--terracota-escura);
+  color: var(--areia-clara);
+}
+
+/* Opções de resposta das perguntas do Raul: maiores, para tocar com o dedo. */
+.chip--resposta {
+  border: 2px solid var(--verde-escuro);
+  color: var(--verde-escuro);
+  font-size: 0.95rem;
+  font-weight: 700;
+  padding: 7px 14px;
+}
+
+.chip--resposta:hover:not(:disabled) {
+  background: var(--verde-escuro);
+  color: var(--areia-clara);
+}
+
+.botao--imprimir {
+  width: 100%;
+  background: var(--amarelo-dourado);
+  color: var(--texto);
+  font-size: 1.05rem;
+  font-weight: 700;
+  padding: 13px 16px;
+}
+
+.chat .botao--imprimir {
+  margin-top: 10px;
+}
+
+.guia__raul {
+  align-self: center;
+}
+
+/* =====================================================================
+   Planejamento: simulador de rotação com linha do tempo por época.
+   ===================================================================== */
+.fase--safra {
+  --fase: var(--verde-petroleo);
+  --fase-texto: var(--areia-clara);
+}
+
+.fase--safrinha {
+  --fase: var(--verde-oliva);
+  --fase-texto: var(--texto);
+}
+
+.fase--entressafra {
+  --fase: #e6d3b3;
+  --fase-texto: var(--texto);
+}
+
+.plano__topo {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.plano__clima {
+  display: flex;
+  gap: 8px;
+  margin: 0;
+}
+
+.plano__clima div {
+  background: var(--fundo);
+  border-radius: 12px;
+  padding: 5px 10px;
+}
+
+.plano__clima dt {
+  font-size: 0.72rem;
+  color: var(--texto-suave);
+  white-space: nowrap;
+}
+
+.plano__clima dd {
+  margin: 0;
+  font-size: 1.3rem;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+
+.linha-tempo {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.linha-tempo__atual {
+  display: grid;
+  grid-template-columns: 56px 1fr;
+  gap: 12px;
+  align-items: center;
+  padding: 10px 14px;
+  border-radius: 16px;
+  background: var(--fundo);
+  border-left: 10px solid var(--fase);
+  margin-bottom: 14px;
+}
+
+.linha-tempo__icone {
+  font-size: 2.6rem;
+  line-height: 1;
+  text-align: center;
+}
+
+.linha-tempo__periodo {
+  font-weight: 700;
+}
+
+.linha-tempo__periodo small {
+  font-weight: 600;
+  padding: 1px 9px;
+  margin-left: 4px;
+  border-radius: 999px;
+  background: var(--fase);
+  color: var(--fase-texto);
+}
+
+.linha-tempo__atual strong {
+  display: block;
+  font-size: 1.45rem;
+  line-height: 1.15;
+}
+
+.linha-tempo__trilho {
+  position: relative;
+  display: flex;
+  gap: 2px;
+  height: 46px;
+  cursor: grab;
+  touch-action: none;
+  user-select: none;
+  border-radius: 8px;
+}
+
+.linha-tempo__trilho:active {
+  cursor: grabbing;
+}
+
+.linha-tempo__trilho:focus-visible {
+  outline: 3px solid var(--destaque);
+  outline-offset: 3px;
+}
+
+.linha-tempo__epoca {
+  flex: 1;
+  min-width: 0;
+  display: grid;
+  place-items: center;
+  border-radius: 6px;
+  background: var(--fase);
+  font-size: 1.15rem;
+  opacity: 0.8;
+  transition: transform 0.12s, opacity 0.12s;
+}
+
+.linha-tempo__epoca--atual {
+  opacity: 1;
+  transform: scaleY(1.18);
+  box-shadow: 0 0 0 3px var(--texto);
+  z-index: 1;
+}
+
+/* Seta que acompanha a época escolhida. */
+.linha-tempo__cursor {
+  position: absolute;
+  top: -15px;
+  left: calc((var(--pos) + 0.5) / var(--epocas) * 100%);
+  margin-left: -9px;
+  border: 9px solid transparent;
+  border-top-color: var(--texto);
+  border-bottom: 0;
+  transition: left 0.12s;
+  pointer-events: none;
+}
+
+.linha-tempo__anos {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: 1fr;
+  margin-top: 4px;
+}
+
+.linha-tempo__anos span {
+  border-left: 2px solid var(--borda-forte);
+  padding-left: 6px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--texto-suave);
+}
+
+.linha-tempo__legenda {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.8rem;
+}
+
+.linha-tempo__legenda span {
+  padding: 2px 10px;
+  border-radius: 999px;
+  background: var(--fase);
+  color: var(--fase-texto);
+  font-weight: 700;
+}
+
+.linha-tempo__legenda small {
+  margin-left: auto;
+  color: var(--texto-suave);
+}
+
+.epocas-plano {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.epoca-plano {
+  width: 100%;
+  display: grid;
+  grid-template-columns: 40px 1fr;
+  gap: 12px;
+  align-items: start;
+  padding: 10px 12px;
+  border: 2px solid var(--borda);
+  border-left: 10px solid var(--fase);
+  border-radius: 14px;
+  background: var(--campo);
+  font: inherit;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.epoca-plano--atual {
+  border-color: var(--texto);
+  border-left-color: var(--fase);
+  background: var(--fundo);
+}
+
+.epoca-plano__icone {
+  font-size: 1.9rem;
+  line-height: 1.1;
+  text-align: center;
+}
+
+.epoca-plano__texto {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.epoca-plano__periodo {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--texto-suave);
+}
+
+.epoca-plano__texto strong {
+  font-size: 1.2rem;
+  line-height: 1.2;
+}
+
+.epoca-plano__previsao {
+  font-weight: 600;
+  margin-top: 2px;
+}
+
+/* =====================================================================
+   Relatório de Rotação de Culturas: só existe na folha impressa (ou PDF).
+   ===================================================================== */
+.relatorio {
+  display: none;
+}
+
+@media print {
+  @page {
+    size: A4;
+    margin: 14mm;
+  }
+
+  :root,
+  body {
+    background: #fff;
+  }
+
+  .app {
+    display: block;
+    min-height: 0;
+  }
+
+  .app > :not(.relatorio) {
+    display: none !important;
+  }
+
+  .relatorio {
+    display: block;
+    font-size: 10.5pt;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  .relatorio section {
+    margin-top: 14pt;
+  }
+
+  .relatorio h2 {
+    font-size: 12pt;
+    color: var(--verde-petroleo);
+    border-bottom: 2px solid var(--verde-oliva);
+    padding-bottom: 2pt;
+    margin-bottom: 7pt;
+    break-after: avoid;
+  }
+
+  .relatorio__topo {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    gap: 14pt;
+    align-items: center;
+    padding-bottom: 8pt;
+    border-bottom: 4px solid var(--verde-petroleo);
+  }
+
+  .relatorio__topo h1 {
+    font-size: 19pt;
+    line-height: 1.15;
+    color: var(--verde-petroleo);
+  }
+
+  .relatorio__topo p {
+    color: var(--texto-suave);
+  }
+
+  .relatorio__topo img:first-child {
+    width: 34mm;
+    height: auto;
+  }
+
+  .relatorio__topo img:last-child {
+    width: 27mm;
+    height: auto;
+  }
+
+  .relatorio__dados {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(30mm, 1fr));
+    gap: 6pt;
+    margin: 0;
+  }
+
+  .relatorio__dados div {
+    background: var(--areia-clara);
+    border-radius: 8pt;
+    padding: 5pt 8pt;
+  }
+
+  .relatorio__dados dt {
+    font-size: 8pt;
+    color: var(--texto-suave);
+  }
+
+  .relatorio__dados dd {
+    margin: 0;
+    font-size: 11.5pt;
+    font-weight: 800;
+  }
+
+  .relatorio__linha {
+    display: flex;
+    flex-direction: column;
+    gap: 4pt;
+  }
+
+  .relatorio__ano {
+    display: grid;
+    grid-template-columns: 13mm repeat(3, 1fr);
+    gap: 3pt;
+    align-items: stretch;
+    break-inside: avoid;
+  }
+
+  .relatorio__ano > b {
+    align-self: center;
+    font-size: 11pt;
+  }
+
+  .relatorio__ano > span {
+    background: var(--fase);
+    color: var(--fase-texto);
+    border-radius: 6pt;
+    padding: 4pt 7pt;
+    font-weight: 700;
+  }
+
+  .relatorio__ano small {
+    display: block;
+    font-size: 8pt;
+    font-weight: 400;
+    opacity: 0.9;
+  }
+
+  .relatorio__epocas {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+
+  .relatorio__epocas li {
+    display: grid;
+    grid-template-columns: 31mm 1fr;
+    gap: 8pt;
+    padding: 5pt 0;
+    border-bottom: 1px solid var(--borda);
+    break-inside: avoid;
+  }
+
+  .relatorio__quando {
+    font-weight: 700;
+    color: var(--verde-petroleo);
+  }
+
+  .relatorio__epocas strong {
+    display: block;
+    font-size: 11.5pt;
+  }
+
+  .relatorio__motivos {
+    display: grid;
+    grid-template-columns: 26mm 1fr;
+    gap: 12pt;
+    align-items: center;
+    background: var(--oliva-claro);
+    border-radius: 10pt;
+    padding: 10pt 12pt;
+    break-inside: avoid;
+  }
+
+  .relatorio__motivos img {
+    width: 26mm;
+    height: auto;
+  }
+
+  .relatorio__motivos h2 {
+    border-bottom: 0;
+    margin-bottom: 4pt;
+  }
+
+  .relatorio__motivos ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6pt 12pt;
+  }
+
+  .relatorio__motivos li {
+    display: grid;
+    grid-template-columns: 16pt 1fr;
+    gap: 4pt;
+  }
+
+  .relatorio__avisos {
+    margin: 8pt 0 0;
+    padding-left: 14pt;
+  }
+
+  .relatorio__rodape {
+    margin-top: 14pt;
+    padding-top: 6pt;
+    border-top: 1px solid var(--borda-forte);
+    font-size: 8.5pt;
+    color: var(--texto-suave);
+  }
 }
