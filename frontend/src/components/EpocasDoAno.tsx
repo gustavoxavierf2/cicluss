@@ -1,6 +1,6 @@
 import type { ClimaAnual } from '../tipos'
 
-/** Chuva e temperatura dos 4 trimestres do ano, destacando a época mais seca. */
+/** Chuva e temperatura dos 4 trimestres do ano, destacando a época mais seca. Sem dado por trimestre, não mostra nada. */
 export function EpocasDoAno({ clima }: { clima: ClimaAnual }) {
   const trimestres = clima.trimestres
   if (!trimestres || trimestres.length === 0) return null
@@ -13,7 +13,6 @@ export function EpocasDoAno({ clima }: { clima: ClimaAnual }) {
 
   return (
     <section className="epocas">
-      <h3>Quando choveu{clima.projetado ? ' (como costuma ser)' : ''}</h3>
       <div className="epocas__barras">
         {trimestres.map((t) => (
           <div key={t.nome} className={t === seco ? 'epoca epoca--seca' : 'epoca'}>
@@ -27,8 +26,8 @@ export function EpocasDoAno({ clima }: { clima: ClimaAnual }) {
         ))}
       </div>
       <p className="epocas__frase">
-        Mais chuva: <b>{chuvoso.nome}</b> ({parte(chuvoso.chuva)}% do ano). Mais seco: <b>{seco.nome}</b>, quando a
-        planta mais sofre.
+        Mais chuva: <b>{chuvoso.nome}</b> ({parte(chuvoso.chuva)}% do ano). Período mais crítico: <b>{seco.nome}</b>,
+        o mais seco, quando a planta mais sofre.{clima.projetado && ' Na previsão, a chuva é repartida como costuma ser.'}
       </p>
     </section>
   )

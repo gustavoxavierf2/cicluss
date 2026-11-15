@@ -1556,13 +1556,13 @@
   color: var(--areia-clara);
 }
 
-/* ---------- painel da esquerda: o resultado (embaixo dele fica o botão do Raul) ---------- */
+/* ---------- painel da esquerda: o resultado ---------- */
 .app--mapa .painel {
   position: fixed;
   z-index: 1050;
   top: var(--margem);
   left: var(--margem);
-  bottom: calc(var(--margem) + 84px);
+  bottom: var(--margem);
   width: var(--largura-painel);
   display: flex;
   flex-direction: column;
@@ -1658,7 +1658,7 @@
   text-align: center;
 }
 
-/* ---------- chat: embaixo à esquerda, sob o painel ---------- */
+/* ---------- chat: embaixo, na coluna do menu (ver o fim do arquivo) ---------- */
 .app--mapa .chat-botao,
 .app--mapa .chat {
   left: var(--margem);
@@ -3008,5 +3008,460 @@
     border-top: 1px solid var(--borda-forte);
     font-size: 8.5pt;
     color: var(--texto-suave);
+  }
+}
+
+/* =====================================================================
+   SDD de melhorias: intervalo de anos, blocos, rotação + plano, ranking, Raul à direita.
+   ===================================================================== */
+
+/* ---------- barra do tempo com dois marcadores ---------- */
+.barra-anos__faixa {
+  position: absolute;
+  top: -5px;
+  bottom: -5px;
+  left: calc(var(--ini) * 100%);
+  width: calc((var(--fim) - var(--ini)) * 100%);
+  border: 3px solid var(--texto);
+  border-left-width: 0;
+  border-right-width: 0;
+  background: var(--amarelo-dourado);
+}
+
+/* Dois controles sobrepostos: só os polegares recebem o toque, para os dois poderem ser arrastados. */
+.barra-anos__input {
+  pointer-events: none;
+}
+
+.barra-anos__input::-webkit-slider-thumb {
+  pointer-events: auto;
+  cursor: grab;
+}
+
+.barra-anos__input::-moz-range-thumb {
+  pointer-events: auto;
+  cursor: grab;
+}
+
+.barra-anos__balao--ini {
+  left: calc(var(--polegar) / 2 + (100% - var(--polegar)) * var(--ini));
+}
+
+.barra-anos__balao--fim {
+  left: calc(var(--polegar) / 2 + (100% - var(--polegar)) * var(--fim));
+}
+
+.barra-anos__rotulo {
+  margin-top: 4px;
+  font-size: 0.95rem;
+  text-align: center;
+}
+
+.barra-anos__atalhos {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 14px;
+}
+
+.barra-anos__rodape {
+  flex-wrap: wrap;
+}
+
+.tempo {
+  max-width: 680px;
+}
+
+/* ---------- blocos independentes: cada um se explica sozinho ---------- */
+.bloco {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 12px 14px;
+  border-radius: 16px;
+  background: var(--campo);
+  border: 1px solid var(--borda);
+  border-top: 6px solid var(--verde-petroleo);
+}
+
+.detalhe,
+.periodo {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.detalhe .detalhe__cabecalho,
+.periodo .detalhe__cabecalho {
+  margin-bottom: 0;
+}
+
+.bloco__titulo {
+  margin: 0;
+  font-size: 0.85rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--texto-suave);
+}
+
+.bloco__titulo small {
+  text-transform: none;
+  letter-spacing: 0;
+  font-weight: 400;
+}
+
+/* resultado: verde-escuro · comparação: oliva · condição do ambiente: dourado · limitação: tracejado */
+.bloco--comparacao {
+  border-top-color: var(--verde-oliva);
+}
+
+.bloco--ambiente {
+  border-top-color: var(--amarelo-dourado);
+}
+
+.bloco--limite {
+  border: 2px dashed var(--borda-forte);
+  background: var(--dourado-claro);
+}
+
+.bloco--limite ul {
+  margin: 0;
+  padding-left: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.bloco .epocas {
+  margin-top: 0;
+}
+
+.bloco .clima-simples dd small,
+.bloco .quadros dd small {
+  font-size: 0.8rem;
+  font-weight: 400;
+  color: var(--texto-suave);
+}
+
+.periodo__contagem {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 16px;
+}
+
+.periodo__contagem b {
+  font-size: 1.25rem;
+}
+
+.periodo .barra {
+  height: 22px;
+}
+
+.anos-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.ano-chip {
+  min-width: 54px;
+  padding: 7px 8px;
+  border: 2px solid transparent;
+  border-radius: 10px;
+  font: inherit;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--texto);
+  cursor: pointer;
+}
+
+.ano-chip--bom {
+  background: var(--bom);
+}
+
+.ano-chip--atencao {
+  background: var(--atencao);
+}
+
+.ano-chip--ruim {
+  background: var(--ruim);
+  color: var(--areia-clara);
+}
+
+.ano-chip--previsao {
+  border-style: dashed;
+  border-color: var(--texto-suave);
+  opacity: 0.85;
+}
+
+.ano-chip--atual {
+  border-style: solid;
+  border-color: var(--texto);
+  box-shadow: 0 0 0 2px var(--campo), 0 0 0 4px var(--texto);
+  opacity: 1;
+}
+
+/* ---------- rotação e planejamento ---------- */
+.recomendacao {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 14px;
+  border-radius: 16px;
+  background: var(--oliva-claro);
+  border: 2px solid var(--bom);
+}
+
+.recomendacao__sequencia {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  font-size: 1.45rem;
+  font-weight: 800;
+  line-height: 1.2;
+}
+
+.recomendacao__sequencia li + li::before {
+  content: '→';
+  margin-right: 6px;
+  color: var(--texto-suave);
+}
+
+.recomendacao__compara {
+  color: var(--texto-suave);
+}
+
+.recomendacao .botao--imprimir:disabled {
+  opacity: 1;
+  background: none;
+  border: 2px solid var(--bom);
+  cursor: default;
+}
+
+.rotacoes__comparar .rotacoes__lista {
+  margin: 10px 0;
+}
+
+/* O plano é a segunda metade da mesma jornada. */
+.rotacoes + .plano {
+  padding-top: 20px;
+  border-top: 2px solid var(--borda);
+}
+
+/* ---------- ranking: pódio ---------- */
+.ranking__regra {
+  padding: 8px 12px;
+  border-radius: 12px;
+  background: var(--dourado-claro);
+}
+
+.cartao-rank__posicao {
+  width: 56px;
+  height: 56px;
+  display: grid;
+  place-items: center;
+  border-radius: 16px;
+  background: var(--fundo);
+  border: 2px solid var(--borda-forte);
+  font-size: 1.4rem;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+
+.cartao-rank--primeiro {
+  border: 2px solid var(--verde-petroleo);
+  background: var(--oliva-claro);
+}
+
+.cartao-rank--primeiro .cartao-rank__posicao {
+  background: var(--verde-petroleo);
+  border-color: var(--verde-petroleo);
+  color: var(--areia-clara);
+}
+
+.cartao-rank__combina {
+  font-weight: 700;
+}
+
+/* ---------- Raul: fixo no canto inferior direito, sob o menu ---------- */
+.app--mapa .painel {
+  bottom: var(--margem);
+}
+
+.menu {
+  max-height: calc(100vh - 3 * var(--margem) - 72px);
+}
+
+.app--mapa .chat-botao,
+.app--mapa .chat {
+  left: auto;
+  right: calc(var(--margem) + env(safe-area-inset-right, 0px));
+  bottom: calc(var(--margem) + env(safe-area-inset-bottom, 0px));
+}
+
+.app--mapa .chat-botao {
+  width: var(--largura-menu);
+}
+
+/* Aberto, o Raul ocupa a parte de baixo da coluna da direita e o menu encolhe (com rolagem) acima dele. */
+.app--mapa .chat {
+  --altura-chat: min(520px, 56vh);
+  width: var(--largura-menu);
+  height: var(--altura-chat);
+  max-height: none;
+}
+
+.app--chat .menu {
+  max-height: calc(100vh - 3 * var(--margem) - min(520px, 56vh));
+}
+
+.chat-botao:focus-visible,
+.chat .fechar:focus-visible,
+.chat__voz:focus-visible,
+.chat__microfone:focus-visible,
+.ano-chip:focus-visible,
+.epoca-plano:focus-visible {
+  outline: 3px solid var(--destaque);
+  outline-offset: 3px;
+}
+
+@media (max-width: 1100px) {
+  .menu,
+  .app--chat .menu {
+    max-height: none;
+  }
+
+  .app--mapa .chat-botao {
+    width: auto;
+    right: calc(12px + env(safe-area-inset-right, 0px));
+    bottom: calc(12px + env(safe-area-inset-bottom, 0px));
+  }
+
+  /* No celular o Raul aberto fica com no máximo 70% da altura: o resto da tela continua à vista. */
+  .app--mapa .chat {
+    width: min(400px, calc(100vw - 24px));
+    height: auto;
+    max-height: 70vh;
+    right: calc(12px + env(safe-area-inset-right, 0px));
+    bottom: calc(12px + env(safe-area-inset-bottom, 0px));
+  }
+
+  /* Espaço no fim da página para o botão fixo não tapar o último conteúdo. */
+  .app--mapa {
+    padding-bottom: 96px;
+  }
+}
+
+/* ---------- relatório: origem de cada informação ---------- */
+@media print {
+  .relatorio__legenda {
+    list-style: none;
+    padding: 0;
+    margin: 8pt 0 0;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 3pt 12pt;
+    font-size: 8.5pt;
+    color: var(--texto-suave);
+  }
+
+  .relatorio__origem {
+    display: inline-block;
+    padding: 0 5pt;
+    border-radius: 999px;
+    font-size: 7.5pt;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    vertical-align: middle;
+    border: 1px solid var(--verde-petroleo);
+    color: var(--verde-petroleo);
+  }
+
+  .relatorio__origem--observado {
+    background: var(--verde-petroleo);
+    color: var(--areia-clara);
+  }
+
+  .relatorio__origem--tendencia {
+    border-style: dashed;
+  }
+
+  .relatorio__origem--estimativa {
+    background: var(--dourado-claro);
+    border-color: var(--terracota-texto);
+    color: var(--terracota-texto);
+  }
+
+  .relatorio__origem--regra {
+    background: var(--oliva-claro);
+  }
+
+  .relatorio h3 {
+    font-size: 10.5pt;
+    margin: 8pt 0 4pt;
+    break-after: avoid;
+  }
+
+  .relatorio__dados {
+    grid-template-columns: repeat(auto-fit, minmax(48mm, 1fr));
+  }
+
+  .relatorio__dados dd small {
+    display: block;
+    font-size: 8pt;
+    font-weight: 400;
+    color: var(--texto-suave);
+  }
+
+  .relatorio__fontes,
+  .relatorio__nota {
+    margin-top: 5pt;
+    font-size: 9pt;
+    color: var(--texto-suave);
+  }
+
+  .relatorio__tabela {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 9.5pt;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .relatorio__tabela th {
+    text-align: left;
+    font-size: 8pt;
+    color: var(--texto-suave);
+    border-bottom: 1.5px solid var(--verde-petroleo);
+    padding: 2pt 4pt;
+  }
+
+  .relatorio__tabela td {
+    padding: 3pt 4pt;
+    border-bottom: 1px solid var(--borda);
+  }
+
+  .relatorio__tabela tfoot td {
+    font-weight: 800;
+    border-bottom: 0;
+    border-top: 1.5px solid var(--verde-petroleo);
+  }
+
+  .relatorio__epocas {
+    margin-top: 6pt;
+  }
+
+  .relatorio__avisos {
+    margin-top: 0;
+  }
+
+  .relatorio__avisos li {
+    margin-bottom: 3pt;
+    break-inside: avoid;
   }
 }

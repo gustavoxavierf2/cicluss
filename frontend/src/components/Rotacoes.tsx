@@ -10,6 +10,8 @@ interface Props {
   hectares: number | null
   culturaPlantadaId: string
   culturaTesteId: string | null
+  /** Cultura que o plano logo abaixo está usando. */
+  culturaDoPlanoId: string
   aoPlanejar: (culturaId: string) => void
 }
 
@@ -30,7 +32,7 @@ function Cartao({ e, indicada, aoPlanejar }: { e: Estrategia; indicada: boolean;
       <div className="estrategia__topo">
         <strong>{e.nome}</strong>
         {e.atual && <span className="etiqueta">o que você faz hoje</span>}
-        {indicada && <span className="etiqueta etiqueta--indicada">melhor opção</span>}
+        {indicada && <span className="etiqueta etiqueta--indicada">recomendada</span>}
       </div>
 
       <div className="estrategia__faixa" role="img"
@@ -81,15 +83,20 @@ function Cartao({ e, indicada, aoPlanejar }: { e: Estrategia; indicada: boolean;
 
       {!e.atual && (
         <button type="button" className="botao-claro" onClick={() => aoPlanejar(e.sequencia[0].id)}>
-          Planejar com esta
+          Planejar esta rotação
         </button>
       )}
     </li>
   )
 }
 
-/** Compara estratégias de rotação (inclui o que o agricultor faz hoje) pelo clima e pela saúde do solo. */
-export function Rotacoes({ ponto, solo, hectares, culturaPlantadaId, culturaTesteId, aoPlanejar }: Props) {
+const anosBons = (e: Estrategia) => `${e.resumo.anosBons} de ${e.resumo.anosBons + e.resumo.anosAtencao + e.resumo.anosRuins} anos bons`
+
+/**
+ * Primeira metade de "Rotação e planejamento": a rotação recomendada (o quê, por quê, cuidado) e a ação de
+ * planejar. A comparação com o que o agricultor faz hoje e os sinais da terra ficam guardados em detalhes.
+ */
+export function Rotacoes({ ponto, solo, hectares, culturaPlantadaId, culturaTesteId, culturaDoPlanoId, aoPlanejar }: Props) {
   const [comparacao, setComparacao] = useState<ComparacaoEstrategias | null>(null)
   const [carregando, setCarregando] = useState(false)
   const [erro, setErro] = useState<string | null>(null)
@@ -112,40 +119,55 @@ export function Rotacoes({ ponto, solo, hectares, culturaPlantadaId, culturaTest
   }, [ponto, solo, hectares, culturaPlantadaId, culturaTesteId])
 
   const indicada = comparacao?.estrategias.find((e) => e.id === comparacao.recomendadaId)
+  const atual = comparacao?.estrategias.find((e) => e.atual)
+  const jaNoPlano = indicada?.sequencia[0]?.id === culturaDoPlanoId
 
   return (
     <section className="rotacoes">
-      <h2 className="titulo-visao">Trocar de planta de um ano para o outro</h2>
-      <p className="nota-rodape">
-        Cada quadradinho é um ano que já passou. As letras são a planta daquele ano e a cor mostra como foi.
-      </p>
+      <h2 className="titulo-visao">Rotação recomendada para este terreno</h2>
 
       {erro && <div className="erro" role="alert"><span>{erro}</span></div>}
       {!comparacao && !erro && carregando && <p className="nota-rodape">Calculando…</p>}
 
-      {comparacao && !erro && (
+      {comparacao && indicada && !erro && (
         <div className={carregando ? 'plano__corpo painel__corpo--carregando' : 'plano__corpo'}>
-          {indicada && (
-            <div className="destaque">
-              <span className="veredito__selo veredito__selo--bom" aria-hidden="true">✓</span>
-              <div>
-                <span className="destaque__rotulo">Melhor opção</span>
-                <strong>{indicada.nome}</strong>
-                <p>{comparacao.porque}</p>
-              </div>
-            </div>
-          )}
+          <div className="recomendacao">
+            <span className="destaque__rotulo">O que plantar, ano após ano</span>
+            <ol className="recomendacao__sequencia"
+              aria-label={`Sequência: ${indicada.sequencia.map((c) => c.nome).join(', depois ')}`}>
+              {indicada.sequencia.map((c, i) => (
+                <li key={`${c.id}-${i}`}>{c.nome}</li>
+              ))}
+            </ol>
+            <p><b>Por quê?</b> {comparacao.porque}</p>
+            {comparacao.epocaSeca && <p><b>Cuidado:</b> {comparacao.epocaSeca}</p>}
+            {atual && !indicada.atual && (
+              <p className="recomendacao__compara">
+                Hoje você faz <b>{atual.nome.toLowerCase()}</b>: {anosBons(atual)}. Com a recomendada:{' '}
+                <b>{anosBons(indicada)}</b>.
+              </p>
+            )}
+            {indicada.atual && <p className="recomendacao__compara">É o que você já faz hoje: {anosBons(indicada)}.</p>}
+            <button type="button" className="botao botao--imprimir" disabled={jaNoPlano}
+              onClick={() => aoPlanejar(indicada.sequencia[0].id)}>
+              {jaNoPlano ? '✓ O plano abaixo já começa por esta rotação' : 'Planejar esta rotação'}
+            </button>
+          </div>
 
-          <ol className="rotacoes__lista">
-            {comparacao.estrategias.map((e) => (
-              <Cartao key={e.id} e={e} indicada={e.id === comparacao.recomendadaId} aoPlanejar={aoPlanejar} />
-            ))}
-          </ol>
-
-          {comparacao.epocaSeca && <p className="aviso-simples">{comparacao.epocaSeca}</p>}
-          <p className="nota-rodape">
-            Os sinais da terra são regras simples, não exame de solo. O dinheiro usa preços de exemplo.
-          </p>
+          <details className="porque rotacoes__comparar">
+            <summary>Comparar com o que você faz hoje e com outras opções</summary>
+            <p className="nota-rodape">
+              Cada quadradinho é um ano que já passou. As letras são a planta daquele ano e a cor mostra como foi.
+            </p>
+            <ol className="rotacoes__lista">
+              {comparacao.estrategias.map((e) => (
+                <Cartao key={e.id} e={e} indicada={e.id === comparacao.recomendadaId} aoPlanejar={aoPlanejar} />
+              ))}
+            </ol>
+            <p className="nota-rodape">
+              Os sinais da terra são regras simples, não exame de solo. O dinheiro usa preços de exemplo.
+            </p>
+          </details>
         </div>
       )}
     </section>
